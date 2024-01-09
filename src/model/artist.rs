@@ -99,15 +99,7 @@ impl ListItem for Artist {
     }
 
     fn display_right(&self, library: &Library) -> String {
-        let followed = if library.is_followed_artist(self) {
-            if library.cfg.values().use_nerdfont.unwrap_or(false) {
-                "\u{f012c} "
-            } else {
-                "✓ "
-            }
-        } else {
-            ""
-        };
+        let followed = if library.is_followed_artist(self) { "✓ " } else { "" };
 
         let tracks = if let Some(tracks) = self.tracks.as_ref() {
             format!("{:>3} saved tracks", tracks.len())

@@ -78,15 +78,7 @@ impl ListItem for Show {
     }
 
     fn display_right(&self, library: &Library) -> String {
-        let saved = if library.is_saved_show(self) {
-            if library.cfg.values().use_nerdfont.unwrap_or(false) {
-                "\u{f012c} "
-            } else {
-                "✓ "
-            }
-        } else {
-            ""
-        };
+        let saved = if library.is_saved_show(self) { "✓ " } else { "" };
         saved.to_owned()
     }
 

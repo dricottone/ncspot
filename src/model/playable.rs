@@ -56,15 +56,7 @@ impl Playable {
                 if library.is_saved_track(&match playable.clone() {
                     Self::Episode(episode) => Self::Episode(episode),
                     Self::Track(track) => Self::Track(track),
-                }) {
-                    if library.cfg.values().use_nerdfont.unwrap_or_default() {
-                        "\u{f012c}"
-                    } else {
-                        "✓"
-                    }
-                } else {
-                    ""
-                },
+                }) { "✓" } else { "" },
             )
             .replace("%duration", playable.duration_str().as_str())
     }

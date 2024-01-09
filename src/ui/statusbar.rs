@@ -33,13 +33,8 @@ impl StatusBar {
         }
     }
 
-    fn use_nerdfont(&self) -> bool {
-        self.library.cfg.values().use_nerdfont.unwrap_or(false)
-    }
-
     fn playback_indicator(&self) -> &str {
         let status = self.spotify.get_current_status();
-        let nerdfont = self.use_nerdfont();
         let flipped = self
             .library
             .cfg
@@ -47,14 +42,9 @@ impl StatusBar {
             .flip_status_indicators
             .unwrap_or(false);
 
-        const NF_PLAY: &str = "\u{f04b} ";
-        const NF_PAUSE: &str = "\u{f04c} ";
-        const NF_STOP: &str = "\u{f04d} ";
-        let indicators = match (nerdfont, flipped) {
-            (false, false) => ("▶ ", "▮▮", "◼ "),
-            (false, true) => ("▮▮", "▶ ", "▶ "),
-            (true, false) => (NF_PLAY, NF_PAUSE, NF_STOP),
-            (true, true) => (NF_PAUSE, NF_PLAY, NF_PLAY),
+        let indicators = match flipped {
+            false => ("▶ ", "▮▮", "◼ "),
+            true => ("▮▮", "▶ ", "▶ "),
         };
 
         match status {
@@ -123,39 +113,15 @@ impl View for StatusBar {
             printer.print((1, 1), self.playback_indicator());
         });
 
-        let updating = if !*self.library.is_done.read().unwrap() {
-            if self.use_nerdfont() {
-                "\u{f04e6} "
-            } else {
-                "[U] "
-            }
-        } else {
-            ""
+        let updating = if !*self.library.is_done.read().unwrap() { "[U] " } else { "" };
+
+        let repeat = match self.queue.get_repeat() {
+            RepeatSetting::None => "",
+            RepeatSetting::RepeatPlaylist => "[R] ",
+            RepeatSetting::RepeatTrack => "[R1] ",
         };
 
-        let repeat = if self.use_nerdfont() {
-            match self.queue.get_repeat() {
-                RepeatSetting::None => "",
-                RepeatSetting::RepeatPlaylist => "\u{f0456} ",
-                RepeatSetting::RepeatTrack => "\u{f0458} ",
-            }
-        } else {
-            match self.queue.get_repeat() {
-                RepeatSetting::None => "",
-                RepeatSetting::RepeatPlaylist => "[R] ",
-                RepeatSetting::RepeatTrack => "[R1] ",
-            }
-        };
-
-        let shuffle = if self.queue.get_shuffle() {
-            if self.use_nerdfont() {
-                "\u{f049d} "
-            } else {
-                "[Z] "
-            }
-        } else {
-            ""
-        };
+        let shuffle = if self.queue.get_shuffle() { "[Z] " } else { "" };
 
         let volume = self.volume_display();
 

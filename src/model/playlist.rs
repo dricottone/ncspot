@@ -201,15 +201,7 @@ impl ListItem for Playlist {
     }
 
     fn display_right(&self, library: &Library) -> String {
-        let saved = if library.is_saved_playlist(self) {
-            if library.cfg.values().use_nerdfont.unwrap_or(false) {
-                "\u{f012c} "
-            } else {
-                "✓ "
-            }
-        } else {
-            ""
-        };
+        let saved = if library.is_saved_playlist(self) { "✓ " } else { "" };
 
         let num_tracks = self
             .tracks
