@@ -119,8 +119,6 @@ impl Application {
         let credentials = authentication::get_credentials(&configuration)?;
         let theme = configuration.build_theme();
 
-        println!("Connecting to Spotify..");
-
         // DON'T USE STDOUT AFTER THIS CALL!
         let mut cursive = create_cursive().map_err(|error| error.to_string())?;
 
