@@ -196,12 +196,6 @@ impl ListItem for Artist {
         })
     }
 
-    fn share_url(&self) -> Option<String> {
-        self.id
-            .clone()
-            .map(|id| format!("https://open.spotify.com/artist/{id}"))
-    }
-
     #[inline]
     fn is_saved(&self, library: &Library) -> Option<bool> {
         Some(library.is_followed_artist(self))

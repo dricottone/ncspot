@@ -58,10 +58,6 @@ impl ListItem for Category {
         Some(view.into_boxed_view_ext())
     }
 
-    fn share_url(&self) -> Option<String> {
-        Some(format!("https://open.spotify.com/genre/{}", self.id))
-    }
-
     fn as_listitem(&self) -> Box<dyn ListItem> {
         Box::new(self.clone())
     }

@@ -283,12 +283,6 @@ impl ListItem for Album {
         })
     }
 
-    fn share_url(&self) -> Option<String> {
-        self.id
-            .clone()
-            .map(|id| format!("https://open.spotify.com/album/{id}"))
-    }
-
     fn artists(&self) -> Option<Vec<Artist>> {
         Some(
             self.artist_ids

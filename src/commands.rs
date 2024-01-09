@@ -323,11 +323,6 @@ impl CommandManager {
                 "The command \"{}\" is unsupported in this view",
                 cmd.basename()
             )),
-            #[cfg(feature = "share_clipboard")]
-            Command::Share(_) => Err(format!(
-                "The command \"{}\" is unsupported in this view",
-                cmd.basename()
-            )),
         }
     }
 
@@ -464,12 +459,6 @@ impl CommandManager {
         kb.insert("r".into(), vec![Command::Repeat(None)]);
         kb.insert("z".into(), vec![Command::Shuffle(None)]);
 
-        #[cfg(feature = "share_clipboard")]
-        {
-            kb.insert("x".into(), vec![Command::Share(TargetMode::Selected)]);
-            kb.insert("Shift+x".into(), vec![Command::Share(TargetMode::Current)]);
-        }
-
         kb.insert("F1".into(), vec![Command::Focus("queue".into())]);
         kb.insert("F2".into(), vec![Command::Focus("search".into())]);
         kb.insert("F3".into(), vec![Command::Focus("library".into())]);
@@ -564,12 +553,6 @@ impl CommandManager {
         kb.insert(
             "Shift+Down".into(),
             vec![Command::Shift(ShiftMode::Down, None)],
-        );
-
-        #[cfg(feature = "share_clipboard")]
-        kb.insert(
-            "Ctrl+v".into(),
-            vec![Command::Insert(crate::command::InsertSource::Clipboard)],
         );
 
         kb

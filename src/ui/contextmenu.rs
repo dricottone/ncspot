@@ -12,8 +12,6 @@ use crate::model::playable::Playable;
 use crate::model::playlist::Playlist;
 use crate::model::track::Track;
 use crate::queue::Queue;
-#[cfg(feature = "share_clipboard")]
-use crate::sharing::write_share;
 use crate::spotify::PlayerEvent;
 use crate::traits::{ListItem, ViewExt};
 use crate::ui::layout::Layout;
@@ -41,8 +39,6 @@ enum ContextMenuAction {
     ShowItem(Box<dyn ListItem>),
     SelectArtist(Vec<Artist>),
     SelectArtistAction(Artist),
-    #[cfg(feature = "share_clipboard")]
-    ShareUrl(String),
     AddToPlaylist(Box<Track>),
     ShowRecommendations(Box<Track>),
     ToggleSavedStatus(Box<dyn ListItem>),
@@ -246,16 +242,6 @@ impl ContextMenu {
             );
         }
 
-        #[cfg(feature = "share_clipboard")]
-        {
-            if let Some(url) = item.share_url() {
-                content.add_item("Share", ContextMenuAction::ShareUrl(url));
-            }
-            if let Some(url) = album.as_ref().and_then(|a| a.share_url()) {
-                content.add_item("Share album", ContextMenuAction::ShareUrl(url));
-            }
-        }
-
         if let Some(t) = item.track() {
             content.add_item(
                 "Add to playlist",
@@ -302,10 +288,6 @@ impl ContextMenu {
                         if let Some(view) = item.open(queue, library) {
                             s.call_on_name("main", move |v: &mut Layout| v.push_view(view));
                         }
-                    }
-                    #[cfg(feature = "share_clipboard")]
-                    ContextMenuAction::ShareUrl(url) => {
-                        write_share(url.to_string());
                     }
                     ContextMenuAction::AddToPlaylist(track) => {
                         let dialog =

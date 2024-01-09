@@ -143,10 +143,6 @@ impl ListItem for Show {
         Some(ShowView::new(queue, library, self).into_boxed_view_ext())
     }
 
-    fn share_url(&self) -> Option<String> {
-        Some(format!("https://open.spotify.com/show/{}", self.id))
-    }
-
     #[inline]
     fn is_saved(&self, library: &Library) -> Option<bool> {
         Some(library.is_saved_show(self))

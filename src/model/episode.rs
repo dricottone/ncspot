@@ -102,10 +102,6 @@ impl ListItem for Episode {
         None
     }
 
-    fn share_url(&self) -> Option<String> {
-        Some(format!("https://open.spotify.com/episode/{}", self.id))
-    }
-
     #[inline]
     fn is_playable(&self) -> bool {
         true

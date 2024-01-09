@@ -23,8 +23,6 @@ use crate::model::playlist::Playlist;
 use crate::model::show::Show;
 use crate::model::track::Track;
 use crate::queue::Queue;
-#[cfg(feature = "share_clipboard")]
-use crate::sharing::{read_share, write_share};
 use crate::spotify::UriType;
 use crate::traits::{IntoBoxedViewExt, ListItem, ViewExt};
 use crate::ui::album::AlbumView;
@@ -552,24 +550,6 @@ impl<I: ListItem + Clone> ViewExt for ListView<I> {
 
                 return Ok(CommandResult::Consumed(None));
             }
-            #[cfg(feature = "share_clipboard")]
-            Command::Share(mode) => {
-                let url = match mode {
-                    TargetMode::Selected => self.content.read().ok().and_then(|content| {
-                        content.get(self.selected).and_then(ListItem::share_url)
-                    }),
-                    TargetMode::Current => self
-                        .queue
-                        .get_current()
-                        .and_then(|t| t.as_listitem().share_url()),
-                };
-
-                if let Some(url) = url {
-                    write_share(url);
-                }
-
-                return Ok(CommandResult::Consumed(None));
-            }
             Command::Jump(mode) => match mode {
                 JumpMode::Query(query) => {
                     self.search_query = query.to_lowercase();
@@ -707,10 +687,6 @@ impl<I: ListItem + Clone> ViewExt for ListView<I> {
             Command::Insert(source) => {
                 let url = match source {
                     InsertSource::Input(url) => Some(url.clone()),
-                    #[cfg(feature = "share_clipboard")]
-                    InsertSource::Clipboard => {
-                        read_share().and_then(crate::spotify_url::SpotifyUrl::from_url)
-                    }
                 };
 
                 let spotify = self.queue.get_spotify();

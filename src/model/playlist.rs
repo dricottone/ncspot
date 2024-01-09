@@ -318,13 +318,6 @@ impl ListItem for Playlist {
         })
     }
 
-    fn share_url(&self) -> Option<String> {
-        Some(format!(
-            "https://open.spotify.com/user/{}/playlist/{}",
-            self.owner_id, self.id
-        ))
-    }
-
     fn is_saved(&self, library: &Library) -> Option<bool> {
         // save status of personal playlists can't be toggled for safety
         if !library.is_followed_playlist(self) {

@@ -201,10 +201,6 @@ impl ListItem for Playable {
         self.as_listitem().open(queue, library)
     }
 
-    fn share_url(&self) -> Option<String> {
-        self.as_listitem().share_url()
-    }
-
     fn album(&self, queue: &Queue) -> Option<Album> {
         self.as_listitem().album(queue)
     }

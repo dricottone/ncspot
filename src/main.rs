@@ -22,7 +22,6 @@ mod model;
 mod panic;
 mod queue;
 mod serialization;
-mod sharing;
 mod spotify;
 mod spotify_api;
 mod spotify_url;

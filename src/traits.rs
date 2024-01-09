@@ -33,7 +33,6 @@ pub trait ListItem: Sync + Send + 'static {
     ) -> Option<Box<dyn ViewExt>> {
         None
     }
-    fn share_url(&self) -> Option<String>;
 
     fn album(&self, _queue: &Queue) -> Option<Album> {
         None

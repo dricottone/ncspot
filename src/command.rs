@@ -104,16 +104,12 @@ impl fmt::Display for SeekDirection {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum InsertSource {
-    #[cfg(feature = "share_clipboard")]
-    Clipboard,
     Input(SpotifyUrl),
 }
 
 impl fmt::Display for InsertSource {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let repr = match self {
-            #[cfg(feature = "share_clipboard")]
-            Self::Clipboard => "".into(),
             Self::Input(url) => url.to_string(),
         };
         write!(f, "{repr}")
@@ -144,8 +140,6 @@ pub enum Command {
     VolumeDown(u16),
     Repeat(Option<RepeatSetting>),
     Shuffle(Option<bool>),
-    #[cfg(feature = "share_clipboard")]
-    Share(TargetMode),
     Back,
     Open(TargetMode),
     Goto(GotoMode),
@@ -182,8 +176,6 @@ impl fmt::Display for Command {
                 Some(b) => vec![(if *b { "on" } else { "off" }).into()],
                 None => vec![],
             },
-            #[cfg(feature = "share_clipboard")]
-            Self::Share(mode) => vec![mode.to_string()],
             Self::Open(mode) => vec![mode.to_string()],
             Self::Goto(mode) => vec![mode.to_string()],
             Self::Move(mode, amount) => match (mode, amount) {
@@ -260,8 +252,6 @@ impl Command {
             Self::VolumeDown(_) => "voldown",
             Self::Repeat(_) => "repeat",
             Self::Shuffle(_) => "shuffle",
-            #[cfg(feature = "share_clipboard")]
-            Self::Share(_) => "share",
             Self::Back => "back",
             Self::Open(_) => "open",
             Self::Goto(_) => "goto",
@@ -546,23 +536,6 @@ pub fn parse(input: &str) -> Result<Vec<Command>, CommandParseError> {
                     }?;
                     Command::Shuffle(switch)
                 }
-                #[cfg(feature = "share_clipboard")]
-                "share" => {
-                    let &target_mode_raw = args.first().ok_or(InsufficientArgs {
-                        cmd: command.into(),
-                        hint: Some("selected|current".into()),
-                    })?;
-                    let target_mode = match target_mode_raw {
-                        "selected" => Ok(TargetMode::Selected),
-                        "current" => Ok(TargetMode::Current),
-                        _ => Err(BadEnumArg {
-                            arg: target_mode_raw.into(),
-                            accept: vec!["selected".into(), "current".into()],
-                            optional: false,
-                        }),
-                    }?;
-                    Command::Share(target_mode)
-                }
                 "back" => Command::Back,
                 "open" => {
                     let &target_mode_raw = args.first().ok_or(InsufficientArgs {
@@ -699,10 +672,6 @@ pub fn parse(input: &str) -> Result<Vec<Command>, CommandParseError> {
                 "noop" => Command::Noop,
                 "insert" => {
                     let insert_source = match args.first().cloned() {
-                        #[cfg(feature = "share_clipboard")]
-                        Some("") | None => Ok(InsertSource::Clipboard),
-                        // if clipboard feature is disabled and args is empty
-                        #[cfg(not(feature = "share_clipboard"))]
                         None => Err(InsufficientArgs {
                             cmd: command.into(),
                             hint: Some("a Spotify URL".into()),
