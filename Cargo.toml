@@ -93,7 +93,7 @@ optional = true
 
 [features]
 alsa_backend = ["librespot-playback/alsa-backend"]
-default = ["pulseaudio_backend", "crossterm_backend"]
+default = ["pulseaudio_backend", "ncurses_backend"]
 ncurses_backend = ["cursive/ncurses-backend"]
 crossterm_backend = ["cursive/crossterm-backend"]
 pancurses_backend = ["cursive/pancurses-backend", "pancurses/win32"]
