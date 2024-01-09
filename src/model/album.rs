@@ -23,7 +23,6 @@ pub struct Album {
     pub artists: Vec<String>,
     pub artist_ids: Vec<String>,
     pub year: String,
-    pub cover_url: Option<String>,
     pub url: Option<String>,
     pub tracks: Option<Vec<Track>>,
     pub added_at: Option<DateTime<Utc>>,
@@ -87,7 +86,6 @@ impl From<&SimplifiedAlbum> for Album {
                 .next()
                 .unwrap()
                 .into(),
-            cover_url: sa.images.first().map(|i| i.url.clone()),
             url: sa.id.as_ref().map(|id| id.url()),
             tracks: None,
             added_at: None,
@@ -116,7 +114,6 @@ impl From<&FullAlbum> for Album {
                 .filter_map(|a| a.id.as_ref().map(|id| id.id().to_string()))
                 .collect(),
             year: fa.release_date.split('-').next().unwrap().into(),
-            cover_url: fa.images.first().map(|i| i.url.clone()),
             url: Some(fa.id.uri()),
             tracks,
             added_at: None,

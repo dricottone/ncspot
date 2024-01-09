@@ -57,22 +57,6 @@ impl TrackFormat {
     }
 }
 
-/// The format used when sending desktop notifications about playback status.
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct NotificationFormat {
-    pub title: Option<String>,
-    pub body: Option<String>,
-}
-
-impl NotificationFormat {
-    pub fn default() -> Self {
-        Self {
-            title: Some(String::from("%title")),
-            body: Some(String::from("%artists")),
-        }
-    }
-}
-
 /// The configuration of ncspot.
 #[derive(Clone, Serialize, Deserialize, Debug, Default)]
 pub struct ConfigValues {
@@ -89,15 +73,12 @@ pub struct ConfigValues {
     pub backend_device: Option<String>,
     pub volnorm: Option<bool>,
     pub volnorm_pregain: Option<f64>,
-    pub notify: Option<bool>,
     pub bitrate: Option<u32>,
     pub gapless: Option<bool>,
     pub shuffle: Option<bool>,
     pub repeat: Option<queue::RepeatSetting>,
-    pub cover_max_scale: Option<f32>,
     pub playback_state: Option<PlaybackState>,
     pub track_format: Option<TrackFormat>,
-    pub notification_format: Option<NotificationFormat>,
     pub statusbar_format: Option<String>,
     pub library_tabs: Option<Vec<LibraryTab>>,
     pub hide_display_names: Option<bool>,

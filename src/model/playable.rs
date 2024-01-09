@@ -83,13 +83,6 @@ impl Playable {
         }
     }
 
-    pub fn cover_url(&self) -> Option<String> {
-        match self {
-            Self::Track(track) => track.cover_url.clone(),
-            Self::Episode(episode) => episode.cover_url.clone(),
-        }
-    }
-
     pub fn duration(&self) -> u32 {
         match self {
             Self::Track(track) => track.duration,

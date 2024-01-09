@@ -20,9 +20,6 @@ pub mod show;
 pub mod statusbar;
 pub mod tabbedview;
 
-#[cfg(feature = "cover")]
-pub mod cover;
-
 /// Create a CursiveRunner which implements the drawing logic and event loop.
 pub fn create_cursive() -> Result<CursiveRunner<Cursive>, Box<dyn std::error::Error>> {
     let backend = cursive::backends::try_default()?;
