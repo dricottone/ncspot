@@ -23,24 +23,6 @@ pub enum PlaybackState {
     Default,
 }
 
-/// The format used to represent tracks in a list.
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct TrackFormat {
-    pub left: Option<String>,
-    pub center: Option<String>,
-    pub right: Option<String>,
-}
-
-impl TrackFormat {
-    pub fn default() -> Self {
-        Self {
-            left: Some(String::from("%artists - %title")),
-            center: Some(String::from("%album")),
-            right: Some(String::from("%saved %duration")),
-        }
-    }
-}
-
 /// The configuration of ncspot.
 #[derive(Clone, Serialize, Deserialize, Debug, Default)]
 pub struct ConfigValues {
@@ -56,9 +38,7 @@ pub struct ConfigValues {
     pub shuffle: Option<bool>,
     pub repeat: Option<queue::RepeatSetting>,
     pub playback_state: Option<PlaybackState>,
-    pub track_format: Option<TrackFormat>,
     pub statusbar_format: Option<String>,
-    pub hide_display_names: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

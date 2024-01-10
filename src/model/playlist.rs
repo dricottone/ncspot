@@ -166,11 +166,11 @@ impl ListItem for Playlist {
         }
     }
 
-    fn display_left(&self, library: &Library) -> String {
-        let hide_owners = library.cfg.values().hide_display_names.unwrap_or(false);
-        match (self.owner_name.as_ref(), hide_owners) {
-            (Some(owner), false) => format!("{} • {}", self.name, owner),
-            _ => self.name.clone(),
+    fn display_left(&self, _library: &Library) -> String {
+        if let Some(owner) = self.owner_name.as_ref() {
+            format!("{} • {}", self.name, owner)
+        } else {
+            self.name.clone()
         }
     }
 

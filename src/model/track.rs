@@ -1,7 +1,6 @@
 use std::fmt;
 use std::sync::{Arc, RwLock};
 
-use crate::config;
 use crate::utils::ms_to_hms;
 use chrono::{DateTime, Utc};
 use rspotify::model::album::FullAlbum;
@@ -173,53 +172,17 @@ impl ListItem for Track {
         current.map(|t| t.id() == self.id).unwrap_or(false)
     }
 
-    fn display_left(&self, library: &Library) -> String {
-        let formatting = library
-            .cfg
-            .values()
-            .track_format
-            .clone()
-            .unwrap_or_default();
-        let default = config::TrackFormat::default().left.unwrap();
-        let left = formatting.left.unwrap_or_else(|| default.clone());
-        if left != default {
-            Playable::format(&Playable::Track(self.clone()), &left, library)
-        } else {
-            format!("{self}")
-        }
+    fn display_left(&self, _library: &Library) -> String {
+        format!("{self}")
     }
 
-    fn display_center(&self, library: &Library) -> String {
-        let formatting = library
-            .cfg
-            .values()
-            .track_format
-            .clone()
-            .unwrap_or_default();
-        let default = config::TrackFormat::default().center.unwrap();
-        let center = formatting.center.unwrap_or_else(|| default.clone());
-        if center != default {
-            Playable::format(&Playable::Track(self.clone()), &center, library)
-        } else {
-            self.album.clone().unwrap_or_default()
-        }
+    fn display_center(&self, _library: &Library) -> String {
+        self.album.clone().unwrap_or_default()
     }
 
     fn display_right(&self, library: &Library) -> String {
-        let formatting = library
-            .cfg
-            .values()
-            .track_format
-            .clone()
-            .unwrap_or_default();
-        let default = config::TrackFormat::default().right.unwrap();
-        let right = formatting.right.unwrap_or_else(|| default.clone());
-        if right != default {
-            Playable::format(&Playable::Track(self.clone()), &right, library)
-        } else {
-            let saved = if library.is_saved_track(&Playable::Track(self.clone())) { "✓" } else { "" };
-            format!("{} {}", saved, self.duration_str())
-        }
+        let saved = if library.is_saved_track(&Playable::Track(self.clone())) { "✓" } else { "" };
+        format!("{} {}", saved, self.duration_str())
     }
 
     fn play(&mut self, queue: &Queue) {
