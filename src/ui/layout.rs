@@ -135,10 +135,6 @@ impl Layout {
         self
     }
 
-    pub fn has_screen(&self, id: &str) -> bool {
-        self.screens.contains_key(id)
-    }
-
     pub fn set_screen<S: Into<String>>(&mut self, id: S) {
         if let Some(view) = self.get_top_view() {
             view.on_leave();

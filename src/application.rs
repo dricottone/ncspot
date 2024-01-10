@@ -5,7 +5,7 @@ use std::sync::{Arc, OnceLock};
 use cursive::theme::{BaseColor, BorderStyle, Palette, PaletteColor, Theme};
 use cursive::traits::Nameable;
 use cursive::{CbSink, Cursive, CursiveRunner};
-use log::{error, info, trace};
+use log::{info, trace};
 
 #[cfg(unix)]
 use futures::stream::StreamExt;
@@ -195,19 +195,7 @@ impl Application {
                 .screen("search", search.with_name("search"))
                 .screen("library", libraryview.with_name("library"))
                 .screen("queue", queueview);
-
-        // initial screen is library
-        let initial_screen = configuration
-            .values()
-            .initial_screen
-            .clone()
-            .unwrap_or_else(|| "library".to_string());
-        if layout.has_screen(&initial_screen) {
-            layout.set_screen(initial_screen);
-        } else {
-            error!("Invalid screen name: {}", initial_screen);
-            layout.set_screen("library");
-        }
+        layout.set_screen("library");
 
         cursive.add_fullscreen_layer(layout.with_name("main"));
 

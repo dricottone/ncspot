@@ -24,18 +24,6 @@ pub enum PlaybackState {
     Default,
 }
 
-/// The focussed library tab when ncspot is started.
-#[derive(Clone, Serialize, Deserialize, Debug, Hash, strum_macros::EnumIter)]
-#[serde(rename_all = "lowercase")]
-pub enum LibraryTab {
-    Tracks,
-    Albums,
-    Artists,
-    Playlists,
-    Podcasts,
-    Browse,
-}
-
 /// The format used to represent tracks in a list.
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct TrackFormat {
@@ -58,7 +46,6 @@ impl TrackFormat {
 #[derive(Clone, Serialize, Deserialize, Debug, Default)]
 pub struct ConfigValues {
     pub command_key: Option<char>,
-    pub initial_screen: Option<String>,
     pub flip_status_indicators: Option<bool>,
     pub audio_cache: Option<bool>,
     pub audio_cache_size: Option<u32>,
@@ -73,7 +60,6 @@ pub struct ConfigValues {
     pub playback_state: Option<PlaybackState>,
     pub track_format: Option<TrackFormat>,
     pub statusbar_format: Option<String>,
-    pub library_tabs: Option<Vec<LibraryTab>>,
     pub hide_display_names: Option<bool>,
 }
 
