@@ -1,8 +1,6 @@
 use clap::builder::PathBufValueParser;
 use librespot_playback::audio_backend;
 
-pub const AUTHOR: &str = "Henrik Friedrichsen <henrik@affekt.org> and contributors";
-pub const BIN_NAME: &str = "ncspot";
 pub const CONFIGURATION_FILE_NAME: &str = "config.toml";
 
 /// Return the [Command](clap::Command) that models the program's command line arguments. The
@@ -16,7 +14,7 @@ pub fn program_arguments() -> clap::Command {
 
     clap::Command::new("ncspot")
         .version(env!("VERSION"))
-        .author(AUTHOR)
+        .author("Henrik Friedrichsen <henrik@affekt.org> and contributors")
         .about("cross-platform ncurses Spotify client")
         .after_help(backends)
         .arg(

@@ -1,5 +1,4 @@
 use cursive::{Cursive, CursiveRunner};
-use ncspot::BIN_NAME;
 
 pub mod album;
 pub mod artist;
@@ -26,7 +25,7 @@ pub fn create_cursive() -> Result<CursiveRunner<Cursive>, Box<dyn std::error::Er
     let buffered_backend = Box::new(cursive_buffered_backend::BufferedBackend::new(backend));
     let mut cursive_runner = CursiveRunner::new(cursive::Cursive::new(), buffered_backend);
 
-    cursive_runner.set_window_title(BIN_NAME);
+    cursive_runner.set_window_title("ncspot");
 
     Ok(cursive_runner)
 }
