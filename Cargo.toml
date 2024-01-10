@@ -53,7 +53,6 @@ pancurses = {version = "0.17.0", optional = true}
 parse_duration = "2.1.1"
 rand = "0.8"
 regex = "1"
-reqwest = {version = "0.11", features = ["blocking", "json"]}
 serde = "1.0"
 serde_cbor = "0.11.2"
 serde_json = "1.0"
@@ -68,9 +67,6 @@ url = "2.5"
 cursive_buffered_backend = "0.6.1"
 dirs = "5.0.1"
 
-[target.'cfg(target_os = "linux")'.dependencies]
-wl-clipboard-rs = {version = "0.8", optional = true}
-
 [target.'cfg(unix)'.dependencies]
 signal-hook = "0.3.0"
 signal-hook-tokio = { version = "0.3.1", features = ["futures-v0_3"] }
@@ -84,13 +80,6 @@ version = "0.12.0"
 default-features = false
 version = "0.20.0"
 
-[dependencies.notify-rust]
-default-features = false
-version = "4"
-# Use zbus, which we already depend on, instead of dbus.
-features = ["z"]
-optional = true
-
 [features]
 alsa_backend = ["librespot-playback/alsa-backend"]
 default = ["pulseaudio_backend", "ncurses_backend"]
@@ -102,17 +91,3 @@ pulseaudio_backend = ["librespot-playback/pulseaudio-backend"]
 rodio_backend = ["librespot-playback/rodio-backend"]
 termion_backend = ["cursive/termion-backend"]
 
-[package.metadata.deb]
-assets = [
-  ["target/release/ncspot", "usr/bin/", "755"],
-  ["misc/ncspot.desktop", "usr/share/applications/", "644"],
-  ["images/logo.svg", "usr/share/icons/hicolor/scalable/apps/ncspot.svg", "644"],
-  ["README.md", "usr/share/doc/ncspot/README.md", "644"],
-]
-depends = "$auto"
-extended-description = """\
-ncurses Spotify client written in Rust using librespot. \
-It is heavily inspired by ncurses MPD clients, such as ncmpc."""
-license-file = ["LICENSE"]
-priority = "optional"
-section = "sound"
