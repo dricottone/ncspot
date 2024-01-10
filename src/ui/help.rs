@@ -5,11 +5,9 @@ use cursive::utils::markup::StyledString;
 use cursive::view::ViewWrapper;
 use cursive::views::{ScrollView, TextView};
 use cursive::Cursive;
-use ncspot::CONFIGURATION_FILE_NAME;
 
 use crate::command::{Command, MoveAmount, MoveMode};
 use crate::commands::CommandResult;
-use crate::config::config_path;
 use crate::traits::ViewExt;
 use cursive::view::scroll::Scroller;
 
@@ -20,14 +18,6 @@ pub struct HelpView {
 impl HelpView {
     pub fn new(bindings: HashMap<String, Vec<Command>>) -> Self {
         let mut text = StyledString::styled("Keybindings\n\n", Effect::Bold);
-
-        let note = format!(
-            "Custom bindings can be set in {} within the [keybindings] section.\n\n",
-            config_path(CONFIGURATION_FILE_NAME)
-                .to_str()
-                .unwrap_or_default()
-        );
-        text.append(StyledString::styled(note, Effect::Italic));
 
         let mut keys: Vec<&String> = bindings.keys().collect();
         keys.sort();
