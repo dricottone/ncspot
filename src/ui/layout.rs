@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
 use cursive::align::HAlign;
@@ -16,7 +15,6 @@ use unicode_width::UnicodeWidthStr;
 use crate::application::UserData;
 use crate::command::{self, Command, JumpMode};
 use crate::commands::CommandResult;
-use crate::config::{self, Config};
 use crate::events;
 use crate::ext_traits::CursiveExt;
 use crate::traits::{IntoBoxedViewExt, ViewExt};
@@ -33,7 +31,6 @@ pub struct Layout {
     last_size: Vec2,
     ev: events::EventManager,
     theme: Theme,
-    configuration: Arc<Config>,
 }
 
 impl Layout {
@@ -41,7 +38,6 @@ impl Layout {
         status: T,
         ev: &events::EventManager,
         theme: Theme,
-        configuration: Arc<Config>,
     ) -> Self {
         let style = ColorStyle::new(
             ColorType::Color(*theme.palette.custom("cmdline_bg").unwrap()),
@@ -101,7 +97,6 @@ impl Layout {
             last_size: Vec2::new(0, 0),
             ev: ev.clone(),
             theme,
-            configuration,
         }
     }
 
@@ -342,38 +337,26 @@ impl View for Layout {
     }
 
     fn on_event(&mut self, event: Event) -> EventResult {
+        let command_key = ':';
+        let search_key = '/';
+
         match event {
             Event::Key(Key::Esc) if self.cmdline_focus => {
                 self.clear_cmdline();
                 EventResult::consumed()
             }
             _ if self.cmdline_focus => self.command_line_handle_event(event),
-            Event::Char(character)
-                if !self.cmdline_focus
-                    && (character
-                        == self
-                            .configuration
-                            .values()
-                            .command_key
-                            .unwrap_or(config::DEFAULT_COMMAND_KEY)
-                        || character == '/') =>
-            {
+            Event::Char(character) if !self.cmdline_focus && (character == command_key || character == search_key) => {
                 let result = self
                     .get_current_view_mut()
                     .map(|view| view.on_event(event))
                     .unwrap_or(EventResult::Ignored);
 
                 if let EventResult::Ignored = result {
-                    let command_key = self
-                        .configuration
-                        .values()
-                        .command_key
-                        .unwrap_or(config::DEFAULT_COMMAND_KEY);
-
                     if character == command_key {
                         self.enable_cmdline(command_key);
                         EventResult::consumed()
-                    } else if character == '/' {
+                    } else if character == search_key {
                         self.enable_jump();
                         EventResult::consumed()
                     } else {

@@ -13,7 +13,6 @@ use crate::serialization::{Serializer, CBOR, TOML};
 
 pub const CLIENT_ID: &str = "d420a117a32841c2b3474932e49fb54b";
 pub const CACHE_VERSION: u16 = 1;
-pub const DEFAULT_COMMAND_KEY: char = ':';
 
 /// The playback state when ncspot is started.
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -45,7 +44,6 @@ impl TrackFormat {
 /// The configuration of ncspot.
 #[derive(Clone, Serialize, Deserialize, Debug, Default)]
 pub struct ConfigValues {
-    pub command_key: Option<char>,
     pub flip_status_indicators: Option<bool>,
     pub audio_cache: Option<bool>,
     pub audio_cache_size: Option<u32>,

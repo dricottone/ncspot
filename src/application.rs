@@ -191,7 +191,7 @@ impl Application {
         let status = ui::statusbar::StatusBar::new(queue.clone(), Arc::clone(&library));
 
         let mut layout =
-            ui::layout::Layout::new(status, &event_manager, theme, Arc::clone(&configuration))
+            ui::layout::Layout::new(status, &event_manager, theme)
                 .screen("search", search.with_name("search"))
                 .screen("library", libraryview.with_name("library"))
                 .screen("queue", queueview);
