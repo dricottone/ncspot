@@ -6,7 +6,6 @@ extern crate serde;
 use std::path::PathBuf;
 
 use application::{setup_logging, Application};
-use config::set_configuration_base_path;
 use ncspot::program_arguments;
 
 mod application;
@@ -30,7 +29,7 @@ mod traits;
 mod ui;
 mod utils;
 
-fn main() -> Result<(), String> {
+fn main() {
     // Set a custom backtrace hook that writes the backtrace to a file instead of stdout, since
     // stdout is most likely in use by Cursive.
     panic::register_backtrace_panic_handler();
@@ -43,16 +42,12 @@ fn main() -> Result<(), String> {
         setup_logging(filename).expect("logger could not be initialized");
     }
 
-    // Set the configuration base path. All configuration files are read/written relative to this
-    // path.
-    set_configuration_base_path(matches.get_one::<PathBuf>("basepath").cloned());
-
     match matches.subcommand() {
         Some(("info", _subcommand_matches)) => cli::info(),
         Some((_, _)) => unreachable!(),
         None => {
             // Create the application.
-            let mut application = Application::new(matches.get_one::<String>("config").cloned())?;
+            let mut application = Application::new().unwrap();
 
             // Start the application event loop.
             application.run()

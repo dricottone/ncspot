@@ -125,11 +125,7 @@ pub fn default_theme() -> Theme {
 
 impl Application {
     /// Create a new ncspot application.
-    ///
-    /// # Arguments
-    ///
-    /// * `configuration_file_path` - Relative path to the configuration file inside the base path
-    pub fn new(configuration_file_path: Option<String>) -> Result<Self, String> {
+    pub fn new() -> Result<Self, String> {
         // Things here may cause the process to abort; we must do them before creating curses
         // windows otherwise the error message will not be seen by a user
 
@@ -142,7 +138,7 @@ impl Application {
             )
             .unwrap();
 
-        let configuration = Arc::new(Config::new(configuration_file_path));
+        let configuration = Arc::new(Config::new());
         let credentials = authentication::get_credentials()?;
 
         // DON'T USE STDOUT AFTER THIS CALL!
@@ -232,7 +228,7 @@ impl Application {
     }
 
     /// Start the application and run the event loop.
-    pub fn run(&mut self) -> Result<(), String> {
+    pub fn run(&mut self) {
         // cursive event loop
         while self.cursive.is_running() {
             self.cursive.step();
@@ -253,6 +249,5 @@ impl Application {
                 }
             }
         }
-        Ok(())
     }
 }

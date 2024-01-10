@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use std::{fs, process};
+use std::fs;
 
+use dirs;
 use log::{debug, error};
-use ncspot::CONFIGURATION_FILE_NAME;
-use platform_dirs::AppDirs;
 
 use crate::command::{SortDirection, SortKey};
 use crate::model::playable::Playable;
@@ -119,9 +118,6 @@ impl Default for UserState {
     }
 }
 
-/// Configuration files are read/written relative to this directory.
-static BASE_PATH: RwLock<Option<PathBuf>> = RwLock::new(None);
-
 /// The complete configuration (state + user configuration) of ncspot.
 pub struct Config {
     /// Configuration set by the user, read only.
@@ -132,21 +128,12 @@ pub struct Config {
 
 impl Config {
     /// Generate the configuration from the user configuration file and the runtime state file.
-    /// `filename` can be used to look for a differently named configuration file.
-    pub fn new(filename: Option<String>) -> Self {
-        let filename = filename.unwrap_or(CONFIGURATION_FILE_NAME.to_owned());
-        let values = load(&filename).unwrap_or_else(|e| {
-            eprint!(
-                "There is an error in your configuration file at {}:\n\n{e}",
-                user_configuration_directory()
-                    .map(|ref mut path| {
-                        path.push(CONFIGURATION_FILE_NAME);
-                        path.to_string_lossy().to_string()
-                    })
-                    .expect("configuration directory expected but not found")
-            );
-            process::exit(1);
-        });
+    pub fn new() -> Self {
+        let values = {
+            let path = config_path("config.toml");
+            TOML.load_or_generate_default(path, || Ok(ConfigValues::default()), false)
+                .expect("There is an error in your configuration file")
+        };
 
         let mut userstate = {
             let path = config_path("userstate.cbor");
@@ -200,82 +187,47 @@ impl Config {
     }
 }
 
-/// Parse the configuration file with name `filename` at the configuration base path.
-fn load(filename: &str) -> Result<ConfigValues, String> {
-    let path = config_path(filename);
-    TOML.load_or_generate_default(path, || Ok(ConfigValues::default()), false)
-}
-
-/// Returns the plaform app directories for ncspot if they could be determined,
-/// or an error otherwise.
-pub fn try_proj_dirs() -> Result<AppDirs, String> {
-    match *BASE_PATH
-        .read()
-        .map_err(|_| String::from("Poisoned RWLock"))?
-    {
-        Some(ref basepath) => Ok(AppDirs {
-            cache_dir: basepath.join(".cache"),
-            config_dir: basepath.join(".config"),
-            data_dir: basepath.join(".local/share"),
-            state_dir: basepath.join(".local/state"),
-        }),
-        None => AppDirs::new(Some("ncspot"), true)
-            .ok_or_else(|| String::from("Couldn't determine platform standard directories")),
-    }
-}
-
-/// Return the path to the current user's configuration directory, or None if it couldn't be found.
-/// This function does not guarantee correct permissions or ownership of the directory!
-pub fn user_configuration_directory() -> Option<PathBuf> {
-    let project_directories = try_proj_dirs().ok()?;
-    Some(project_directories.config_dir)
-}
-
-/// Return the path to the current user's cache directory, or None if one couldn't be found. This
-/// function does not guarantee correct permissions or ownership of the directory!
-pub fn user_cache_directory() -> Option<PathBuf> {
-    let project_directories = try_proj_dirs().ok()?;
-    Some(project_directories.cache_dir)
-}
-
-/// Force create the configuration directory at the default project location, removing anything that
-/// isn't a directory but has the same name. Return the path to the configuration file inside the
+/// Return the path to the current user's configuration directory. This
+/// function does not guarantee correct permissions or ownership of the
 /// directory.
-///
-/// This doesn't create the file, only the containing directory.
+pub fn user_configuration_directory() -> PathBuf {
+    let mut path = dirs::config_dir().unwrap();
+    path.push("ncspot");
+    path
+}
+
+/// Return the path to the current user's cache directory. This function does
+/// not guarantee correct permissions or ownership of the directory.
+pub fn user_cache_directory() -> PathBuf {
+    let mut path = dirs::cache_dir().unwrap();
+    path.push("ncspot");
+    path
+}
+
+/// Force create the configuration directory at the default project location,
+/// removing anything that isn't a directory but has the same name. Return the
+/// path to the configuration file inside the directory. This doesn't create
+/// the file, only the containing directory.
 pub fn config_path(file: &str) -> PathBuf {
-    let cfg_dir = user_configuration_directory().unwrap();
-    if cfg_dir.exists() && !cfg_dir.is_dir() {
-        fs::remove_file(&cfg_dir).expect("unable to remove old config file");
+    let mut path = user_configuration_directory();
+    if path.exists() && !path.is_dir() {
+        fs::remove_file(&path).expect("unable to remove old config file");
     }
-    if !cfg_dir.exists() {
-        fs::create_dir_all(&cfg_dir).expect("can't create config folder");
+    if !path.exists() {
+        fs::create_dir_all(&path).expect("can't create config folder");
     }
-    let mut cfg = cfg_dir.to_path_buf();
-    cfg.push(file);
-    cfg
+    path.push(file);
+    path
 }
 
-/// Create the cache directory at the default project location, preserving it if it already exists,
-/// and return the path to the cache file inside the directory.
-///
-/// This doesn't create the file, only the containing directory.
+/// Create the cache directory at the default project location, preserving it
+/// if it already exists, and return the path to the cache file inside the
+/// directory. This doesn't create the file, only the containing directory.
 pub fn cache_path(file: &str) -> PathBuf {
-    let cache_dir = user_cache_directory().unwrap();
-    if !cache_dir.exists() {
-        fs::create_dir_all(&cache_dir).expect("can't create cache folder");
+    let mut path = user_cache_directory();
+    if !path.exists() {
+        fs::create_dir_all(&path).expect("can't create cache folder");
     }
-    let mut pb = cache_dir.to_path_buf();
-    pb.push(file);
-    pb
-}
-
-/// Set the configuration base path. All configuration files are read/written relative to this path.
-pub fn set_configuration_base_path(base_path: Option<PathBuf>) {
-    if let Some(basepath) = base_path {
-        if !basepath.exists() {
-            fs::create_dir_all(&basepath).expect("could not create basepath directory");
-        }
-        *BASE_PATH.write().unwrap() = Some(basepath);
-    }
+    path.push(file);
+    path
 }
