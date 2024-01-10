@@ -1,8 +1,6 @@
 use crate::queue::RepeatSetting;
 use crate::spotify_url::SpotifyUrl;
-use std::collections::HashMap;
 use std::fmt;
-use std::sync::OnceLock;
 
 use strum_macros::Display;
 
@@ -270,37 +268,6 @@ impl Command {
     }
 }
 
-fn register_aliases(map: &mut HashMap<&str, &str>, cmd: &'static str, names: Vec<&'static str>) {
-    for a in names {
-        map.insert(a, cmd);
-    }
-}
-
-fn handle_aliases(input: &str) -> &str {
-    // NOTE: There is probably a better way to write this than a static HashMap. The HashMap doesn't
-    // improve performance as there's far too few keys, and the use of static doesn't seem good.
-    static ALIASES: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
-
-    let aliases = ALIASES.get_or_init(|| {
-        let mut m = HashMap::new();
-
-        register_aliases(&mut m, "quit", vec!["q", "x"]);
-        register_aliases(
-            &mut m,
-            "playpause",
-            vec!["pause", "toggleplay", "toggleplayback"],
-        );
-        register_aliases(&mut m, "repeat", vec!["loop"]);
-        m
-    });
-
-    if let Some(cmd) = aliases.get(input) {
-        handle_aliases(cmd)
-    } else {
-        input
-    }
-}
-
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum CommandParseError {
     NoSuchCommand {
@@ -382,11 +349,11 @@ pub fn parse(input: &str) -> Result<Vec<Command>, CommandParseError> {
         let components: Vec<_> = command_input.split_whitespace().collect();
 
         if let Some((command, args)) = components.split_first() {
-            let command = handle_aliases(command);
             use CommandParseError::*;
+            let command = *command;
             let command = match command {
-                "quit" => Command::Quit,
-                "playpause" => Command::TogglePlay,
+                "quit" | "q" | "x" => Command::Quit,
+                "playpause" | "pause" | "toggleplay" | "toggleplayback" => Command::TogglePlay,
                 "stop" => Command::Stop,
                 "previous" => Command::Previous,
                 "next" => Command::Next,
@@ -491,7 +458,7 @@ pub fn parse(input: &str) -> Result<Vec<Command>, CommandParseError> {
                     };
                     Command::VolumeDown(amount)
                 }
-                "repeat" => {
+                "repeat" | "loop" => {
                     let mode = match args.first().cloned() {
                         Some("list" | "playlist" | "queue") => {
                             Ok(Some(RepeatSetting::RepeatPlaylist))

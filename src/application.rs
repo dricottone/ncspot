@@ -172,7 +172,7 @@ impl Application {
             configuration.clone()
         ));
 
-        let mut cmd_manager = CommandManager::new(
+        let cmd_manager = CommandManager::new(
             spotify.clone(),
             queue.clone(),
             library.clone(),
@@ -180,7 +180,6 @@ impl Application {
             event_manager.clone(),
         );
 
-        cmd_manager.register_all();
         cmd_manager.register_keybindings(&mut cursive);
 
         cursive.set_user_data(Rc::new(UserDataInner { cmd: cmd_manager }));

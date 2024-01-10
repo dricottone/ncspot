@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -34,7 +33,6 @@ pub enum CommandResult {
 }
 
 pub struct CommandManager {
-    aliases: HashMap<String, String>,
     spotify: Spotify,
     queue: Arc<Queue>,
     library: Arc<Library>,
@@ -51,26 +49,12 @@ impl CommandManager {
         events: EventManager,
     ) -> Self {
         Self {
-            aliases: HashMap::new(),
             spotify,
             queue,
             library,
             config,
             events,
         }
-    }
-
-    pub fn register_aliases<S: Into<String>>(&mut self, name: S, aliases: Vec<S>) {
-        let name = name.into();
-        for a in aliases {
-            self.aliases.insert(a.into(), name.clone());
-        }
-    }
-
-    pub fn register_all(&mut self) {
-        self.register_aliases("quit", vec!["q", "x"]);
-        self.register_aliases("playpause", vec!["pause", "toggleplay", "toggleplayback"]);
-        self.register_aliases("repeat", vec!["loop"]);
     }
 
     fn handle_default_commands(
