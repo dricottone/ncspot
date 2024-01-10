@@ -147,7 +147,6 @@ pub enum Command {
     Search(String),
     Jump(JumpMode),
     Help,
-    ReloadConfig,
     Noop,
     Insert(InsertSource),
     NewPlaylist(String),
@@ -214,7 +213,6 @@ impl fmt::Display for Command {
             | Self::AddCurrent
             | Self::Back
             | Self::Help
-            | Self::ReloadConfig
             | Self::Noop
             | Self::Logout
             | Self::Reconnect
@@ -259,7 +257,6 @@ impl Command {
             Self::Jump(JumpMode::Next) => "jumpnext",
             Self::Jump(JumpMode::Query(_)) => "jump",
             Self::Help => "help",
-            Self::ReloadConfig => "reload",
             Self::Noop => "noop",
             Self::Insert(_) => "insert",
             Self::NewPlaylist(_) => "newplaylist",
@@ -664,7 +661,6 @@ pub fn parse(input: &str) -> Result<Vec<Command>, CommandParseError> {
                 "jumpnext" => Command::Jump(JumpMode::Next),
                 "jumpprevious" => Command::Jump(JumpMode::Previous),
                 "help" => Command::Help,
-                "reload" => Command::ReloadConfig,
                 "noop" => Command::Noop,
                 "insert" => {
                     let insert_source = match args.first().cloned() {

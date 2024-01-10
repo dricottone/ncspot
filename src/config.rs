@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::error::Error;
 use std::path::PathBuf;
 use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::{fs, process};
@@ -125,8 +124,6 @@ static BASE_PATH: RwLock<Option<PathBuf>> = RwLock::new(None);
 
 /// The complete configuration (state + user configuration) of ncspot.
 pub struct Config {
-    /// The configuration file path.
-    filename: String,
     /// Configuration set by the user, read only.
     values: RwLock<ConfigValues>,
     /// Runtime state which can't be edited by the user, read/write.
@@ -170,7 +167,6 @@ impl Config {
         }
 
         Self {
-            filename,
             values: RwLock::new(values),
             state: RwLock::new(userstate),
         }
@@ -201,16 +197,6 @@ impl Config {
         if let Err(e) = CBOR.write(path, self.state().clone()) {
             error!("Could not save user state: {}", e);
         }
-    }
-
-    /// Attempt to reload the configuration from the configuration file.
-    ///
-    /// This only updates the values stored in memory but doesn't perform any additional actions
-    /// like updating active keybindings.
-    pub fn reload(&self) -> Result<(), Box<dyn Error>> {
-        let cfg = load(&self.filename)?;
-        *self.values.write().unwrap() = cfg;
-        Ok(())
     }
 }
 
