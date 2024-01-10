@@ -1,5 +1,3 @@
-use std::process::Command;
-
 use cursive::traits::Resizable;
 use cursive::view::Nameable;
 use cursive::views::*;
@@ -8,40 +6,22 @@ use cursive::Cursive;
 use librespot_core::authentication::Credentials as RespotCredentials;
 use librespot_core::cache::Cache;
 use librespot_protocol::authentication::AuthenticationType;
-use log::info;
 
-use crate::config::{self, Config};
+use crate::config;
 use crate::spotify::Spotify;
 use crate::ui::create_cursive;
 
 /// Get credentials for use with librespot. This first tries to get cached credentials. If no cached
 /// credentials are available, it will either try to get them from the user configured commands, or
 /// if that fails, it will prompt the user on stdout.
-pub fn get_credentials(configuration: &Config) -> Result<RespotCredentials, String> {
+pub fn get_credentials() -> Result<RespotCredentials, String> {
     let mut credentials = {
         let cache = Cache::new(Some(config::cache_path("librespot")), None, None, None)
             .expect("Could not create librespot cache");
         let cached_credentials = cache.credentials();
         match cached_credentials {
-            Some(c) => {
-                info!("Using cached credentials");
-                c
-            }
-            None => {
-                info!("Attempting to resolve credentials via username/password commands");
-                let creds = configuration
-                    .values()
-                    .credentials
-                    .clone()
-                    .unwrap_or_default();
-
-                match (creds.username_cmd, creds.password_cmd) {
-                    (Some(username_cmd), Some(password_cmd)) => {
-                        credentials_eval(&username_cmd, &password_cmd)?
-                    }
-                    _ => credentials_prompt(None)?,
-                }
-            }
+            Some(c) => c,
+            None => credentials_prompt(None)?,
         }
     };
 
@@ -118,38 +98,6 @@ pub fn create_credentials() -> Result<RespotCredentials, String> {
         .user_data()
         .cloned()
         .unwrap_or_else(|| Err("Didn't obtain any credentials".to_string()))
-}
-
-pub fn credentials_eval(
-    username_cmd: &str,
-    password_cmd: &str,
-) -> Result<RespotCredentials, String> {
-    fn eval(cmd: &str) -> Result<Vec<u8>, String> {
-        println!("Executing \"{}\"", cmd);
-        let mut result = Command::new("sh")
-            .args(["-c", cmd])
-            .output()
-            .map_err(|e| e.to_string())?
-            .stdout;
-        if let Some(&last_byte) = result.last() {
-            if last_byte == 10 {
-                result.pop();
-            }
-        }
-
-        Ok(result)
-    }
-
-    println!("Retrieving username");
-    let username = String::from_utf8_lossy(&eval(username_cmd)?).into();
-    println!("Retrieving password");
-    let password = eval(password_cmd)?;
-
-    Ok(RespotCredentials {
-        username,
-        auth_type: AuthenticationType::AUTHENTICATION_USER_PASS,
-        auth_data: password,
-    })
 }
 
 #[derive(Serialize, Deserialize, Debug)]

@@ -143,7 +143,7 @@ impl Application {
             .unwrap();
 
         let configuration = Arc::new(Config::new(configuration_file_path));
-        let credentials = authentication::get_credentials(&configuration)?;
+        let credentials = authentication::get_credentials()?;
 
         // DON'T USE STDOUT AFTER THIS CALL!
         let mut cursive = create_cursive().map_err(|error| error.to_string())?;
