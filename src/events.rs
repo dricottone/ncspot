@@ -8,7 +8,6 @@ pub enum Event {
     Player(PlayerEvent),
     Queue(QueueEvent),
     SessionDied,
-    IpcInput(String),
 }
 
 pub type EventSender = Sender<Event>;

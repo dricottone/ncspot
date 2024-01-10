@@ -31,9 +31,6 @@ mod traits;
 mod ui;
 mod utils;
 
-#[cfg(unix)]
-mod ipc;
-
 fn main() -> Result<(), String> {
     // Set a custom backtrace hook that writes the backtrace to a file instead of stdout, since
     // stdout is most likely in use by Cursive.

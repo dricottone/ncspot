@@ -21,11 +21,8 @@ use crate::library::Library;
 use crate::queue::Queue;
 use crate::spotify::{PlayerEvent, Spotify};
 use crate::ui::create_cursive;
-use crate::{authentication, ui, utils};
-use crate::{command, queue, spotify};
-
-#[cfg(unix)]
-use crate::ipc::{self, IpcSocket};
+use crate::{authentication, ui};
+use crate::{queue, spotify};
 
 /// Set up the global logger to log to `filename`.
 pub fn setup_logging(filename: &Path) -> Result<(), fern::InitError> {
@@ -89,9 +86,6 @@ pub struct Application {
     spotify: Spotify,
     /// Internally shared
     event_manager: EventManager,
-    /// An IPC implementation using a Unix domain socket, used to control and inspect ncspot.
-    #[cfg(unix)]
-    ipc: Option<IpcSocket>,
     /// The object to render to the terminal.
     cursive: CursiveRunner<Cursive>,
 }
@@ -144,21 +138,6 @@ impl Application {
             spotify.clone(),
             configuration.clone()
         ));
-
-        #[cfg(unix)]
-        let ipc = if let Ok(runtime_directory) = utils::create_runtime_directory() {
-            Some(
-                ipc::IpcSocket::new(
-                    ASYNC_RUNTIME.get().unwrap().handle(),
-                    runtime_directory.join("ncspot.sock"),
-                    event_manager.clone(),
-                )
-                .map_err(|e| e.to_string())?,
-            )
-        } else {
-            error!("failed to create IPC socket: no suitable user runtime directory found");
-            None
-        };
 
         let mut cmd_manager = CommandManager::new(
             spotify.clone(),
@@ -215,8 +194,6 @@ impl Application {
             queue,
             spotify,
             event_manager,
-            #[cfg(unix)]
-            ipc,
             cursive,
         })
     }
@@ -232,11 +209,6 @@ impl Application {
                         trace!("event received: {:?}", state);
                         self.spotify.update_status(state.clone());
 
-                        #[cfg(unix)]
-                        if let Some(ref ipc) = self.ipc {
-                            ipc.publish(&state, self.queue.get_current());
-                        }
-
                         if state == PlayerEvent::FinishedTrack {
                             self.queue.next(false);
                         }
@@ -245,17 +217,6 @@ impl Application {
                         self.queue.handle_event(event);
                     }
                     Event::SessionDied => self.spotify.start_worker(None),
-                    Event::IpcInput(input) => match command::parse(&input) {
-                        Ok(commands) => {
-                            if let Some(data) = self.cursive.user_data::<UserData>().cloned() {
-                                for cmd in commands {
-                                    info!("Executing command from IPC: {cmd}");
-                                    data.cmd.handle(&mut self.cursive, cmd);
-                                }
-                            }
-                        }
-                        Err(e) => error!("Parsing error: {e}"),
-                    },
                 }
             }
         }
