@@ -133,7 +133,6 @@ pub enum Command {
     SaveQueue,
     Add,
     AddCurrent,
-    Delete,
     Focus(String),
     Seek(SeekDirection),
     VolumeUp(u16),
@@ -213,7 +212,6 @@ impl fmt::Display for Command {
             | Self::SaveQueue
             | Self::Add
             | Self::AddCurrent
-            | Self::Delete
             | Self::Back
             | Self::Help
             | Self::ReloadConfig
@@ -245,7 +243,6 @@ impl Command {
             Self::SaveQueue => "save queue",
             Self::Add => "add",
             Self::AddCurrent => "add current",
-            Self::Delete => "delete",
             Self::Focus(_) => "focus",
             Self::Seek(_) => "seek",
             Self::VolumeUp(_) => "volup",
@@ -420,7 +417,6 @@ pub fn parse(input: &str) -> Result<Vec<Command>, CommandParseError> {
                     }),
                     None => Ok(Command::Save),
                 }?,
-                "delete" => Command::Delete,
                 "focus" => {
                     let &target = args.first().ok_or(InsufficientArgs {
                         cmd: command.into(),

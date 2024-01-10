@@ -4,7 +4,6 @@ use std::{cmp::Ordering, iter::Iterator};
 
 use rand::{seq::IteratorRandom, thread_rng};
 
-use log::{debug, warn};
 use rspotify::model::playlist::{FullPlaylist, SimplifiedPlaylist};
 use rspotify::model::Id;
 
@@ -53,31 +52,6 @@ impl Playlist {
                 .iter()
                 .any(|track| track.id() == Some(track_id.to_string()))
         })
-    }
-
-    pub fn delete_track(&mut self, index: usize, spotify: Spotify, library: &Library) -> bool {
-        let playable = self.tracks.as_ref().unwrap()[index].clone();
-        debug!("deleting track: {} {:?}", index, playable);
-
-        if playable.track().map(|t| t.is_local) == Some(true) {
-            warn!("track is a local file, can't delete");
-            return false;
-        }
-
-        match spotify
-            .api
-            .delete_tracks(&self.id, &self.snapshot_id, &[playable])
-        {
-            false => false,
-            true => {
-                if let Some(tracks) = &mut self.tracks {
-                    tracks.remove(index);
-                    library.playlist_update(self);
-                }
-
-                true
-            }
-        }
     }
 
     pub fn append_tracks(&mut self, new_tracks: &[Playable], spotify: &Spotify, library: &Library) {
@@ -241,25 +215,8 @@ impl ListItem for Playlist {
         }
     }
 
-    fn toggle_saved(&mut self, library: &Library) {
-        // Don't allow users to unsave their own playlists with one keypress
-        if !library.is_followed_playlist(self) {
-            return;
-        }
-
-        if library.is_saved_playlist(self) {
-            library.delete_playlist(&self.id);
-        } else {
-            library.follow_playlist(self);
-        }
-    }
-
     fn save(&mut self, library: &Library) {
         library.follow_playlist(self);
-    }
-
-    fn unsave(&mut self, library: &Library) {
-        library.delete_playlist(&self.id);
     }
 
     fn open(&self, queue: Arc<Queue>, library: Arc<Library>) -> Option<Box<dyn ViewExt>> {

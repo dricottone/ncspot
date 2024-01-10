@@ -41,11 +41,7 @@ impl ListItem for Category {
 
     fn queue(&mut self, _queue: &Queue) {}
 
-    fn toggle_saved(&mut self, _library: &Library) {}
-
     fn save(&mut self, _library: &Library) {}
-
-    fn unsave(&mut self, _library: &Library) {}
 
     fn open(
         &self,

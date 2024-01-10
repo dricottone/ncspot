@@ -41,7 +41,7 @@ enum ContextMenuAction {
     SelectArtistAction(Artist),
     AddToPlaylist(Box<Track>),
     ShowRecommendations(Box<Track>),
-    ToggleSavedStatus(Box<dyn ListItem>),
+    Save(Box<dyn ListItem>),
     Play(Box<dyn ListItem>),
     PlayNext(Box<dyn ListItem>),
     TogglePlayback,
@@ -143,17 +143,9 @@ impl ContextMenu {
         let moved_artist = artist.clone();
         let mut artist_action_select = SelectView::<bool>::new();
         artist_action_select.add_item("View Artist", true);
-        artist_action_select.add_item(
-            format!(
-                "{}ollow Artist",
-                if library.is_followed_artist(&artist) {
-                    "Unf"
-                } else {
-                    "F"
-                }
-            ),
-            false,
-        );
+        if !library.is_followed_artist(&artist) {
+            artist_action_select.add_item("Follow Artist", false);
+        }
         artist_action_select.set_on_submit(move |s, selected_action| {
             match selected_action {
                 true => {
@@ -162,9 +154,7 @@ impl ContextMenu {
                     }
                 }
                 false => {
-                    if library.clone().is_followed_artist(&moved_artist) {
-                        moved_artist.clone().unsave(&library);
-                    } else {
+                    if !library.clone().is_followed_artist(&moved_artist) {
                         moved_artist.clone().save(&library);
                     }
                 }
@@ -253,14 +243,8 @@ impl ContextMenu {
             )
         }
         // If the item is saveable, its save state will be set
-        if let Some(savestatus) = item.is_saved(&library) {
-            content.add_item(
-                match savestatus {
-                    true => "Unsave",
-                    false => "Save",
-                },
-                ContextMenuAction::ToggleSavedStatus(item.as_listitem()),
-            );
+        if let Some(false) = item.is_saved(&library) {
+            content.add_item("Save", ContextMenuAction::Save(item.as_listitem()));
         }
 
         if let Some(ref a) = album {
@@ -270,7 +254,7 @@ impl ContextMenu {
                         true => "Unsave album",
                         false => "Save album",
                     },
-                    ContextMenuAction::ToggleSavedStatus(a.as_listitem()),
+                    ContextMenuAction::Save(a.as_listitem()),
                 );
             }
         }
@@ -308,9 +292,7 @@ impl ContextMenu {
                             Self::select_artist_action_dialog(library, queue, artist.clone());
                         s.add_layer(dialog);
                     }
-                    ContextMenuAction::ToggleSavedStatus(item) => {
-                        item.as_listitem().toggle_saved(&library)
-                    }
+                    ContextMenuAction::Save(item) => item.as_listitem().save(&library),
                     ContextMenuAction::Play(item) => item.as_listitem().play(&queue),
                     ContextMenuAction::PlayNext(item) => item.as_listitem().play_next(&queue),
                     ContextMenuAction::TogglePlayback => queue.toggleplayback(),

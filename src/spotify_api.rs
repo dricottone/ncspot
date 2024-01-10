@@ -13,7 +13,7 @@ use log::{debug, error, info};
 use rspotify::http::HttpError;
 use rspotify::model::{
     AlbumId, AlbumType, ArtistId, CursorBasedPage, EpisodeId, FullAlbum, FullArtist, FullEpisode,
-    FullPlaylist, FullShow, FullTrack, ItemPositions, Market, Page, PlayableId, PlaylistId,
+    FullPlaylist, FullShow, FullTrack, Market, Page, PlayableId, PlaylistId,
     PrivateUser, Recommendations, SavedAlbum, SavedTrack, SearchResult, SearchType, Show, ShowId,
     SimplifiedTrack, TrackId, UserId,
 };
@@ -176,38 +176,6 @@ impl WebApi {
         .is_some()
     }
 
-    pub fn delete_tracks(
-        &self,
-        playlist_id: &str,
-        snapshot_id: &str,
-        playables: &[Playable],
-    ) -> bool {
-        self.api_with_retry(move |api| {
-            let playable_ids: Vec<PlayableId> = playables
-                .iter()
-                .filter_map(|playable| playable.into())
-                .collect();
-            let positions = playables
-                .iter()
-                .map(|playable| [playable.list_index() as u32])
-                .collect::<Vec<_>>();
-            let item_pos: Vec<ItemPositions> = playable_ids
-                .iter()
-                .zip(positions.iter())
-                .map(|(id, positions)| ItemPositions {
-                    id: id.as_ref(),
-                    positions,
-                })
-                .collect();
-            api.playlist_remove_specific_occurrences_of_items(
-                PlaylistId::from_id(playlist_id).unwrap(),
-                item_pos,
-                Some(snapshot_id),
-            )
-        })
-        .is_some()
-    }
-
     pub fn overwrite_playlist(&self, id: &str, tracks: &[Playable]) {
         // create mutable copy for chunking
         let mut tracks: Vec<Playable> = tracks.to_vec();
@@ -249,11 +217,6 @@ impl WebApi {
         } else {
             error!("error saving tracks to playlist {}", id);
         }
-    }
-
-    pub fn delete_playlist(&self, id: &str) -> bool {
-        self.api_with_retry(|api| api.playlist_unfollow(PlaylistId::from_id(id).unwrap()))
-            .is_some()
     }
 
     pub fn create_playlist(
@@ -510,18 +473,6 @@ impl WebApi {
         .is_some()
     }
 
-    pub fn unsave_shows(&self, ids: Vec<&str>) -> bool {
-        self.api_with_retry(|api| {
-            api.remove_users_saved_shows(
-                ids.iter()
-                    .map(|id| ShowId::from_id(*id).unwrap())
-                    .collect::<Vec<ShowId>>(),
-                Some(Market::FromToken),
-            )
-        })
-        .is_some()
-    }
-
     pub fn current_user_followed_artists(
         &self,
         last: Option<&str>,
@@ -565,16 +516,6 @@ impl WebApi {
         })
     }
 
-    pub fn current_user_saved_albums_delete(&self, ids: Vec<&str>) -> Option<()> {
-        self.api_with_retry(|api| {
-            api.current_user_saved_albums_delete(
-                ids.iter()
-                    .map(|id| AlbumId::from_id(*id).unwrap())
-                    .collect::<Vec<AlbumId>>(),
-            )
-        })
-    }
-
     pub fn current_user_saved_tracks(&self, offset: u32) -> Option<Page<SavedTrack>> {
         self.api_with_retry(|api| {
             api.current_user_saved_tracks_manual(Some(Market::FromToken), Some(50), Some(offset))
@@ -584,16 +525,6 @@ impl WebApi {
     pub fn current_user_saved_tracks_add(&self, ids: Vec<&str>) -> Option<()> {
         self.api_with_retry(|api| {
             api.current_user_saved_tracks_add(
-                ids.iter()
-                    .map(|id| TrackId::from_id(*id).unwrap())
-                    .collect::<Vec<TrackId>>(),
-            )
-        })
-    }
-
-    pub fn current_user_saved_tracks_delete(&self, ids: Vec<&str>) -> Option<()> {
-        self.api_with_retry(|api| {
-            api.current_user_saved_tracks_delete(
                 ids.iter()
                     .map(|id| TrackId::from_id(*id).unwrap())
                     .collect::<Vec<TrackId>>(),

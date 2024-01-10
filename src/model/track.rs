@@ -235,20 +235,8 @@ impl ListItem for Track {
         queue.append(Playable::Track(self.clone()));
     }
 
-    fn toggle_saved(&mut self, library: &Library) {
-        if library.is_saved_track(&Playable::Track(self.clone())) {
-            library.unsave_tracks(vec![self], true);
-        } else {
-            library.save_tracks(vec![self], true);
-        }
-    }
-
     fn save(&mut self, library: &Library) {
         library.save_tracks(vec![self], true);
-    }
-
-    fn unsave(&mut self, library: &Library) {
-        library.unsave_tracks(vec![self], true);
     }
 
     fn open(&self, _queue: Arc<Queue>, _library: Arc<Library>) -> Option<Box<dyn ViewExt>> {

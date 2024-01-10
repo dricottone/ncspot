@@ -130,27 +130,6 @@ impl Library {
         store.len() - 1
     }
 
-    pub fn delete_playlist(&self, id: &str) {
-        if !*self.is_done.read().unwrap() {
-            return;
-        }
-
-        let pos = {
-            let store = self.playlists.read().expect("can't readlock playlists");
-            store.iter().position(|i| i.id == id)
-        };
-
-        if let Some(position) = pos {
-            if self.spotify.api.delete_playlist(id) {
-                {
-                    let mut store = self.playlists.write().expect("can't writelock playlists");
-                    store.remove(position);
-                }
-                self.save_cache(config::cache_path(CACHE_PLAYLISTS), self.playlists.clone());
-            }
-        }
-    }
-
     pub fn overwrite_playlist(&self, id: &str, tracks: &[Playable]) {
         debug!("saving {} tracks to list {}", tracks.len(), id);
         self.spotify.api.overwrite_playlist(id, tracks);
@@ -583,38 +562,6 @@ impl Library {
         self.save_cache(config::cache_path(CACHE_ARTISTS), self.artists.clone());
     }
 
-    pub fn unsave_tracks(&self, tracks: Vec<&Track>, api: bool) {
-        if !*self.is_done.read().unwrap() {
-            return;
-        }
-
-        if api
-            && self
-                .spotify
-                .api
-                .current_user_saved_tracks_delete(
-                    tracks.iter().filter_map(|t| t.id.as_deref()).collect(),
-                )
-                .is_none()
-        {
-            return;
-        }
-
-        {
-            let mut store = self.tracks.write().unwrap();
-            *store = store
-                .iter()
-                .filter(|t| !tracks.iter().any(|tt| t.id == tt.id))
-                .cloned()
-                .collect();
-        }
-
-        self.populate_artists();
-
-        self.save_cache(config::cache_path(CACHE_TRACKS), self.tracks.clone());
-        self.save_cache(config::cache_path(CACHE_ARTISTS), self.artists.clone());
-    }
-
     pub fn is_saved_album(&self, album: &Album) -> bool {
         if !*self.is_done.read().unwrap() {
             return false;
@@ -648,30 +595,6 @@ impl Library {
                 // resort list of albums
                 store.sort_unstable_by_key(|a| format!("{}{}{}", a.artists[0], a.year, a.title));
             }
-        }
-
-        self.save_cache(config::cache_path(CACHE_ALBUMS), self.albums.clone());
-    }
-
-    pub fn unsave_album(&self, album: &mut Album) {
-        if !*self.is_done.read().unwrap() {
-            return;
-        }
-
-        if let Some(ref album_id) = album.id {
-            if self
-                .spotify
-                .api
-                .current_user_saved_albums_delete(vec![album_id.as_str()])
-                .is_none()
-            {
-                return;
-            }
-        }
-
-        {
-            let mut store = self.albums.write().unwrap();
-            *store = store.iter().filter(|a| a.id != album.id).cloned().collect();
         }
 
         self.save_cache(config::cache_path(CACHE_ALBUMS), self.albums.clone());
@@ -809,19 +732,6 @@ impl Library {
                 if !store.iter().any(|s| s.id == show.id) {
                     store.insert(0, show.clone());
                 }
-            }
-        }
-    }
-
-    pub fn unsave_show(&self, show: &Show) {
-        if !*self.is_done.read().unwrap() {
-            return;
-        }
-
-        if self.spotify.api.unsave_shows(vec![show.id.as_str()]) {
-            {
-                let mut store = self.shows.write().unwrap();
-                *store = store.iter().filter(|s| s.id != show.id).cloned().collect();
             }
         }
     }

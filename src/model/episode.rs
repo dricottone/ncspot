@@ -92,11 +92,7 @@ impl ListItem for Episode {
         queue.append(Playable::Episode(self.clone()));
     }
 
-    fn toggle_saved(&mut self, _library: &Library) {}
-
     fn save(&mut self, _library: &Library) {}
-
-    fn unsave(&mut self, _library: &Library) {}
 
     fn open(&self, _queue: Arc<Queue>, _library: Arc<Library>) -> Option<Box<dyn ViewExt>> {
         None

@@ -208,20 +208,8 @@ impl ListItem for Album {
         }
     }
 
-    fn toggle_saved(&mut self, library: &Library) {
-        if library.is_saved_album(self) {
-            library.unsave_album(self);
-        } else {
-            library.save_album(self);
-        }
-    }
-
     fn save(&mut self, library: &Library) {
         library.save_album(self);
-    }
-
-    fn unsave(&mut self, library: &Library) {
-        library.unsave_album(self);
     }
 
     fn open(&self, queue: Arc<Queue>, library: Arc<Library>) -> Option<Box<dyn ViewExt>> {

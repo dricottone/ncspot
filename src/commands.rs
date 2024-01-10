@@ -309,7 +309,6 @@ impl CommandManager {
             | Command::Save
             | Command::SaveQueue
             | Command::Add
-            | Command::Delete
             | Command::Focus(_)
             | Command::Back
             | Command::Open(_)
@@ -434,7 +433,6 @@ impl CommandManager {
         kb.insert("Shift+n".into(), vec![Command::Jump(JumpMode::Previous)]);
         kb.insert("s".into(), vec![Command::Save]);
         kb.insert("Ctrl+s".into(), vec![Command::SaveQueue]);
-        kb.insert("d".into(), vec![Command::Delete]);
         kb.insert(
             "f".into(),
             vec![Command::Seek(SeekDirection::Relative(1000))],

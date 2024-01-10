@@ -115,20 +115,8 @@ impl ListItem for Show {
         }
     }
 
-    fn toggle_saved(&mut self, library: &Library) {
-        if library.is_saved_show(self) {
-            self.unsave(library);
-        } else {
-            self.save(library);
-        }
-    }
-
     fn save(&mut self, library: &Library) {
         library.save_show(self);
-    }
-
-    fn unsave(&mut self, library: &Library) {
-        library.unsave_show(self);
     }
 
     fn open(&self, queue: Arc<Queue>, library: Arc<Library>) -> Option<Box<dyn ViewExt>> {

@@ -9,7 +9,6 @@ use crate::library::Library;
 use crate::model::playable::Playable;
 use crate::model::playlist::Playlist;
 use crate::queue::Queue;
-use crate::spotify::Spotify;
 
 use crate::traits::ViewExt;
 use crate::ui::listview::ListView;
@@ -17,7 +16,6 @@ use crate::ui::listview::ListView;
 pub struct PlaylistView {
     playlist: Playlist,
     list: ListView<Playable>,
-    spotify: Spotify,
     library: Arc<Library>,
     queue: Arc<Queue>,
 }
@@ -37,7 +35,6 @@ impl PlaylistView {
             Vec::new()
         };
 
-        let spotify = queue.get_spotify();
         let list = ListView::new(
             Arc::new(RwLock::new(tracks)),
             queue.clone(),
@@ -47,7 +44,6 @@ impl PlaylistView {
         Self {
             playlist,
             list,
-            spotify,
             library,
             queue,
         }
@@ -78,20 +74,6 @@ impl ViewExt for PlaylistView {
     }
 
     fn on_command(&mut self, s: &mut Cursive, cmd: &Command) -> Result<CommandResult, String> {
-        if let Command::Delete = cmd {
-            let pos = self.list.get_selected_index();
-
-            return if self
-                .playlist
-                .delete_track(pos, self.spotify.clone(), &self.library)
-            {
-                self.list.remove(pos);
-                Ok(CommandResult::Consumed(None))
-            } else {
-                Err("Could not delete track.".to_string())
-            };
-        }
-
         if let Command::Sort(key, direction) = cmd {
             self.library.cfg.with_state_mut(|mut state| {
                 let order = crate::config::SortingOrder {

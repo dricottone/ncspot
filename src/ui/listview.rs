@@ -185,19 +185,6 @@ impl<I: ListItem + Clone> ListView<I> {
             listitem.play(&self.queue);
         }
     }
-
-    /// Remove the item at `index` from the list.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `index` is out of bounds.
-    pub fn remove(&mut self, index: usize) {
-        let mut c = self.content.write().unwrap();
-        c.remove(index);
-        if self.selected >= c.len() {
-            self.selected = self.selected.saturating_sub(1);
-        }
-    }
 }
 
 impl<I: ListItem + Clone> View for ListView<I> {
@@ -534,18 +521,6 @@ impl<I: ListItem + Clone> ViewExt for ListView<I> {
                         );
                         return Ok(CommandResult::Modal(Box::new(dialog)));
                     }
-                }
-
-                return Ok(CommandResult::Consumed(None));
-            }
-            Command::Delete => {
-                let mut item = {
-                    let content = self.content.read().unwrap();
-                    content.get(self.selected).cloned()
-                };
-
-                if let Some(item) = item.as_mut() {
-                    item.unsave(&self.library);
                 }
 
                 return Ok(CommandResult::Consumed(None));

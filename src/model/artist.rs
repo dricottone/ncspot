@@ -143,20 +143,8 @@ impl ListItem for Artist {
         }
     }
 
-    fn toggle_saved(&mut self, library: &Library) {
-        if library.is_followed_artist(self) {
-            library.unfollow_artist(self);
-        } else {
-            library.follow_artist(self);
-        }
-    }
-
     fn save(&mut self, library: &Library) {
         library.follow_artist(self);
-    }
-
-    fn unsave(&mut self, library: &Library) {
-        library.unfollow_artist(self);
     }
 
     fn open(&self, queue: Arc<Queue>, library: Arc<Library>) -> Option<Box<dyn ViewExt>> {

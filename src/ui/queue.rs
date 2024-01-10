@@ -128,16 +128,6 @@ impl ViewExt for QueueView {
             Command::Queue => {
                 return Ok(CommandResult::Ignored);
             }
-            Command::Delete => {
-                let selected = self.list.get_selected_index();
-                let len = self.queue.len();
-
-                self.queue.remove(selected);
-                if selected == len.saturating_sub(1) {
-                    self.list.move_focus(-1);
-                }
-                return Ok(CommandResult::Consumed(None));
-            }
             Command::Shift(mode, amount) => {
                 let amount = match amount {
                     Some(amount) => *amount,

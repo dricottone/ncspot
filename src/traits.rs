@@ -22,9 +22,7 @@ pub trait ListItem: Sync + Send + 'static {
     fn play(&mut self, queue: &Queue);
     fn play_next(&mut self, queue: &Queue);
     fn queue(&mut self, queue: &Queue);
-    fn toggle_saved(&mut self, library: &Library);
     fn save(&mut self, library: &Library);
-    fn unsave(&mut self, library: &Library);
     fn open(&self, queue: Arc<Queue>, library: Arc<Library>) -> Option<Box<dyn ViewExt>>;
     fn open_recommendations(
         &mut self,
