@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::application::UserData;
+use crate::application::send_command;
 use crate::command::{
     Command, GotoMode, JumpMode, MoveAmount, MoveMode, SeekDirection, ShiftMode, TargetMode,
 };
@@ -35,7 +35,6 @@ pub enum CommandResult {
 
 pub struct CommandManager {
     aliases: HashMap<String, String>,
-    bindings: HashMap<String, Vec<Command>>,
     spotify: Spotify,
     queue: Arc<Queue>,
     library: Arc<Library>,
@@ -53,7 +52,6 @@ impl CommandManager {
     ) -> Self {
         Self {
             aliases: HashMap::new(),
-            bindings: Self::default_keybindings(),
             spotify,
             queue,
             library,
@@ -179,7 +177,7 @@ impl CommandManager {
                 Ok(None)
             }
             Command::Help => {
-                let view = Box::new(HelpView::new(self.bindings.clone()));
+                let view = Box::new(HelpView::new());
                 s.call_on_name("main", move |v: &mut Layout| v.push_view(view));
                 Ok(None)
             }
@@ -303,6 +301,7 @@ impl CommandManager {
         }
     }
 
+
     pub fn handle(&self, s: &mut Cursive, cmd: Command) {
         let result = self.handle_callbacks(s, &cmd);
 
@@ -313,245 +312,73 @@ impl CommandManager {
         s.on_event(Event::Refresh);
     }
 
-    pub fn register_keybinding<E: Into<cursive::event::Event>>(
-        &self,
-        cursive: &mut Cursive,
-        event: E,
-        commands: Vec<Command>,
-    ) {
-        cursive.add_global_callback(event, move |s| {
-            if let Some(data) = s.user_data::<UserData>().cloned() {
-                for command in commands.clone().into_iter() {
-                    data.cmd.handle(s, command);
-                }
-            }
-        });
-    }
-
     pub fn register_keybindings(&self, cursive: &mut Cursive) {
-        for (k, v) in self.bindings.iter() {
-            if let Some(binding) = Self::parse_keybinding(k) {
-                self.register_keybinding(cursive, binding, v.clone());
-            } else {
-                error!("Could not parse keybinding: \"{}\"", k);
-            }
-        }
-    }
+        cursive.add_global_callback(Event::Char('q'), move |siv| send_command(siv, Command::Quit));
 
-    fn default_keybindings() -> HashMap<String, Vec<Command>> {
-        let mut kb = HashMap::new();
+        cursive.add_global_callback(Event::CtrlChar('l'), move |siv| send_command(siv, Command::Redraw));
+        cursive.add_global_callback(Event::Char('P'), move |siv| send_command(siv, Command::TogglePlay));
+        cursive.add_global_callback(Event::Char('U'), move |siv| send_command(siv, Command::UpdateLibrary));
+        cursive.add_global_callback(Event::Char('S'), move |siv| send_command(siv, Command::Stop));
+        cursive.add_global_callback(Event::Char('<'), move |siv| send_command(siv, Command::Previous));
+        cursive.add_global_callback(Event::Char('>'), move |siv| send_command(siv, Command::Next));
+        cursive.add_global_callback(Event::Char('c'), move |siv| send_command(siv, Command::Clear));
 
-        kb.insert("q".into(), vec![Command::Quit]);
-        kb.insert("Ctrl+l".into(), vec![Command::Redraw]);
-        kb.insert("Shift+p".into(), vec![Command::TogglePlay]);
-        kb.insert("Shift+u".into(), vec![Command::UpdateLibrary]);
-        kb.insert("Shift+s".into(), vec![Command::Stop]);
-        kb.insert("<".into(), vec![Command::Previous]);
-        kb.insert(">".into(), vec![Command::Next]);
-        kb.insert("c".into(), vec![Command::Clear]);
-        kb.insert(
-            "Space".into(),
-            vec![
-                Command::Queue,
-                Command::Move(MoveMode::Down, Default::default()),
-            ],
-        );
-        kb.insert(
-            ".".into(),
-            vec![
-                Command::PlayNext,
-                Command::Move(MoveMode::Down, Default::default()),
-            ],
-        );
-        kb.insert("Enter".into(), vec![Command::Play]);
-        kb.insert("n".into(), vec![Command::Jump(JumpMode::Next)]);
-        kb.insert("Shift+n".into(), vec![Command::Jump(JumpMode::Previous)]);
-        kb.insert("s".into(), vec![Command::Save]);
-        kb.insert("Ctrl+s".into(), vec![Command::SaveQueue]);
-        kb.insert(
-            "f".into(),
-            vec![Command::Seek(SeekDirection::Relative(1000))],
-        );
-        kb.insert(
-            "b".into(),
-            vec![Command::Seek(SeekDirection::Relative(-1000))],
-        );
-        kb.insert(
-            "Shift+f".into(),
-            vec![Command::Seek(SeekDirection::Relative(10000))],
-        );
-        kb.insert(
-            "Shift+b".into(),
-            vec![Command::Seek(SeekDirection::Relative(-10000))],
-        );
-        kb.insert("+".into(), vec![Command::VolumeUp(1)]);
-        kb.insert("]".into(), vec![Command::VolumeUp(5)]);
-        kb.insert("-".into(), vec![Command::VolumeDown(1)]);
-        kb.insert("[".into(), vec![Command::VolumeDown(5)]);
+        cursive.add_global_callback(Event::Char(' '), move |siv| send_command(siv, Command::Queue));
+        cursive.add_global_callback(Event::Char(' '), move |siv| send_command(siv, Command::Move(MoveMode::Down, Default::default())));
+        cursive.add_global_callback(Event::Char('.'), move |siv| send_command(siv, Command::PlayNext));
+        cursive.add_global_callback(Event::Char('.'), move |siv| send_command(siv, Command::Move(MoveMode::Down, Default::default())));
 
-        kb.insert("r".into(), vec![Command::Repeat(None)]);
-        kb.insert("z".into(), vec![Command::Shuffle(None)]);
+        cursive.add_global_callback(Event::Key(Key::Enter), move |siv| send_command(siv, Command::Play));
+        cursive.add_global_callback(Event::Char('n'), move |siv| send_command(siv, Command::Jump(JumpMode::Next)));
+        cursive.add_global_callback(Event::Char('N'), move |siv| send_command(siv, Command::Jump(JumpMode::Previous)));
+        cursive.add_global_callback(Event::Char('s'), move |siv| send_command(siv, Command::Save));
+        cursive.add_global_callback(Event::CtrlChar('s'), move |siv| send_command(siv, Command::SaveQueue));
+        cursive.add_global_callback(Event::Char('f'), move |siv| send_command(siv, Command::Seek(SeekDirection::Relative(1000))));
+        cursive.add_global_callback(Event::Char('b'), move |siv| send_command(siv, Command::Seek(SeekDirection::Relative(-1000))));
+        cursive.add_global_callback(Event::Char('F'), move |siv| send_command(siv, Command::Seek(SeekDirection::Relative(10000))));
+        cursive.add_global_callback(Event::Char('B'), move |siv| send_command(siv, Command::Seek(SeekDirection::Relative(-10000))));
+        cursive.add_global_callback(Event::Char('+'), move |siv| send_command(siv, Command::VolumeUp(1)));
+        cursive.add_global_callback(Event::Char(']'), move |siv| send_command(siv, Command::VolumeUp(5)));
+        cursive.add_global_callback(Event::Char('-'), move |siv| send_command(siv, Command::VolumeDown(1)));
+        cursive.add_global_callback(Event::Char('['), move |siv| send_command(siv, Command::VolumeDown(5)));
 
-        kb.insert("F1".into(), vec![Command::Focus("queue".into())]);
-        kb.insert("F2".into(), vec![Command::Focus("search".into())]);
-        kb.insert("F3".into(), vec![Command::Focus("library".into())]);
-        kb.insert("?".into(), vec![Command::Help]);
-        kb.insert("Backspace".into(), vec![Command::Back]);
+        cursive.add_global_callback(Event::Char('r'), move |siv| send_command(siv, Command::Repeat(None)));
+        cursive.add_global_callback(Event::Char('z'), move |siv| send_command(siv, Command::Shuffle(None)));
 
-        kb.insert("o".into(), vec![Command::Open(TargetMode::Selected)]);
-        kb.insert("Shift+o".into(), vec![Command::Open(TargetMode::Current)]);
-        kb.insert("a".into(), vec![Command::Goto(GotoMode::Album)]);
-        kb.insert("Shift+a".into(), vec![Command::Goto(GotoMode::Artist)]);
+        cursive.add_global_callback(Event::Key(Key::F1), move |siv| send_command(siv, Command::Focus("queue".into())));
+        cursive.add_global_callback(Event::Key(Key::F2), move |siv| send_command(siv, Command::Focus("search".into())));
+        cursive.add_global_callback(Event::Key(Key::F3), move |siv| send_command(siv, Command::Focus("library".into())));
+        cursive.add_global_callback(Event::Char('?'), move |siv| send_command(siv, Command::Help));
+        cursive.add_global_callback(Event::Key(Key::Backspace), move |siv| send_command(siv, Command::Back));
 
-        kb.insert(
-            "m".into(),
-            vec![Command::ShowRecommendations(TargetMode::Selected)],
-        );
-        kb.insert(
-            "Shift+m".into(),
-            vec![Command::ShowRecommendations(TargetMode::Current)],
-        );
+        cursive.add_global_callback(Event::Char('o'), move |siv| send_command(siv, Command::Open(TargetMode::Selected)));
+        cursive.add_global_callback(Event::Char('O'), move |siv| send_command(siv, Command::Open(TargetMode::Current)));
+        cursive.add_global_callback(Event::Char('a'), move |siv| send_command(siv, Command::Goto(GotoMode::Album)));
+        cursive.add_global_callback(Event::Char('A'), move |siv| send_command(siv, Command::Goto(GotoMode::Artist)));
 
-        kb.insert(
-            "Up".into(),
-            vec![Command::Move(MoveMode::Up, Default::default())],
-        );
-        kb.insert(
-            "p".into(),
-            vec![Command::Move(MoveMode::Playing, Default::default())],
-        );
-        kb.insert(
-            "Down".into(),
-            vec![Command::Move(MoveMode::Down, Default::default())],
-        );
-        kb.insert(
-            "Left".into(),
-            vec![Command::Move(MoveMode::Left, Default::default())],
-        );
-        kb.insert(
-            "Right".into(),
-            vec![Command::Move(MoveMode::Right, Default::default())],
-        );
-        kb.insert(
-            "PageUp".into(),
-            vec![Command::Move(MoveMode::Up, MoveAmount::Integer(5))],
-        );
-        kb.insert(
-            "PageDown".into(),
-            vec![Command::Move(MoveMode::Down, MoveAmount::Integer(5))],
-        );
-        kb.insert(
-            "Home".into(),
-            vec![Command::Move(MoveMode::Up, MoveAmount::Extreme)],
-        );
-        kb.insert(
-            "End".into(),
-            vec![Command::Move(MoveMode::Down, MoveAmount::Extreme)],
-        );
-        kb.insert(
-            "k".into(),
-            vec![Command::Move(MoveMode::Up, Default::default())],
-        );
-        kb.insert(
-            "j".into(),
-            vec![Command::Move(MoveMode::Down, Default::default())],
-        );
-        kb.insert(
-            "h".into(),
-            vec![Command::Move(MoveMode::Left, Default::default())],
-        );
-        kb.insert(
-            "l".into(),
-            vec![Command::Move(MoveMode::Right, Default::default())],
-        );
+        cursive.add_global_callback(Event::Char('m'), move |siv| send_command(siv, Command::ShowRecommendations(TargetMode::Selected)));
+        cursive.add_global_callback(Event::Char('M'), move |siv| send_command(siv, Command::ShowRecommendations(TargetMode::Current)));
 
-        kb.insert(
-            "Ctrl+p".into(),
-            vec![Command::Move(MoveMode::Up, Default::default())],
-        );
-        kb.insert(
-            "Ctrl+n".into(),
-            vec![Command::Move(MoveMode::Down, Default::default())],
-        );
-        kb.insert(
-            "Ctrl+a".into(),
-            vec![Command::Move(MoveMode::Left, Default::default())],
-        );
-        kb.insert(
-            "Ctrl+e".into(),
-            vec![Command::Move(MoveMode::Right, Default::default())],
-        );
+        cursive.add_global_callback(Event::Key(Key::Up), move |siv| send_command(siv, Command::Move(MoveMode::Up, Default::default())));
+        cursive.add_global_callback(Event::Char('p'), move |siv| send_command(siv, Command::Move(MoveMode::Playing, Default::default())));
+        cursive.add_global_callback(Event::Key(Key::Down), move |siv| send_command(siv, Command::Move(MoveMode::Down, Default::default())));
+        cursive.add_global_callback(Event::Key(Key::Left), move |siv| send_command(siv, Command::Move(MoveMode::Left, Default::default())));
+        cursive.add_global_callback(Event::Key(Key::Right), move |siv| send_command(siv, Command::Move(MoveMode::Right, Default::default())));
+        cursive.add_global_callback(Event::Key(Key::PageUp), move |siv| send_command(siv, Command::Move(MoveMode::Up, MoveAmount::Integer(5))));
+        cursive.add_global_callback(Event::Key(Key::PageDown), move |siv| send_command(siv, Command::Move(MoveMode::Down, MoveAmount::Integer(5))));
+        cursive.add_global_callback(Event::Key(Key::Home), move |siv| send_command(siv, Command::Move(MoveMode::Up, MoveAmount::Extreme)));
+        cursive.add_global_callback(Event::Key(Key::End), move |siv| send_command(siv, Command::Move(MoveMode::Down, MoveAmount::Extreme)));
+        cursive.add_global_callback(Event::Char('k'), move |siv| send_command(siv, Command::Move(MoveMode::Up, Default::default())));
+        cursive.add_global_callback(Event::Char('j'), move |siv| send_command(siv, Command::Move(MoveMode::Down, Default::default())));
+        cursive.add_global_callback(Event::Char('h'), move |siv| send_command(siv, Command::Move(MoveMode::Left, Default::default())));
+        cursive.add_global_callback(Event::Char('l'), move |siv| send_command(siv, Command::Move(MoveMode::Right, Default::default())));
 
-        kb.insert("Shift+Up".into(), vec![Command::Shift(ShiftMode::Up, None)]);
-        kb.insert(
-            "Shift+Down".into(),
-            vec![Command::Shift(ShiftMode::Down, None)],
-        );
+        cursive.add_global_callback(Event::CtrlChar('p'), move |siv| send_command(siv, Command::Move(MoveMode::Up, Default::default())));
+        cursive.add_global_callback(Event::CtrlChar('n'), move |siv| send_command(siv, Command::Move(MoveMode::Down, Default::default())));
+        cursive.add_global_callback(Event::CtrlChar('a'), move |siv| send_command(siv, Command::Move(MoveMode::Left, Default::default())));
+        cursive.add_global_callback(Event::CtrlChar('e'), move |siv| send_command(siv, Command::Move(MoveMode::Right, Default::default())));
 
-        kb
-    }
-
-    fn parse_key(key: &str) -> Event {
-        match key {
-            "Enter" => Event::Key(Key::Enter),
-            "Space" => Event::Char(" ".chars().next().unwrap()),
-            "Tab" => Event::Key(Key::Tab),
-            "Backspace" => Event::Key(Key::Backspace),
-            "Esc" => Event::Key(Key::Esc),
-            "Left" => Event::Key(Key::Left),
-            "Right" => Event::Key(Key::Right),
-            "Up" => Event::Key(Key::Up),
-            "Down" => Event::Key(Key::Down),
-            "Ins" => Event::Key(Key::Ins),
-            "Del" => Event::Key(Key::Del),
-            "Home" => Event::Key(Key::Home),
-            "End" => Event::Key(Key::End),
-            "PageUp" => Event::Key(Key::PageUp),
-            "PageDown" => Event::Key(Key::PageDown),
-            "PauseBreak" => Event::Key(Key::PauseBreak),
-            "NumpadCenter" => Event::Key(Key::NumpadCenter),
-            "F0" => Event::Key(Key::F0),
-            "F1" => Event::Key(Key::F1),
-            "F2" => Event::Key(Key::F2),
-            "F3" => Event::Key(Key::F3),
-            "F4" => Event::Key(Key::F4),
-            "F5" => Event::Key(Key::F5),
-            "F6" => Event::Key(Key::F6),
-            "F7" => Event::Key(Key::F7),
-            "F8" => Event::Key(Key::F8),
-            "F9" => Event::Key(Key::F9),
-            "F10" => Event::Key(Key::F10),
-            "F11" => Event::Key(Key::F11),
-            "F12" => Event::Key(Key::F12),
-            s => Event::Char(s.chars().next().unwrap()),
-        }
-    }
-
-    fn parse_keybinding(kb: &str) -> Option<cursive::event::Event> {
-        let mut split = kb.split('+');
-        if kb != "+" && split.clone().count() == 2 {
-            let modifier = split.next().unwrap();
-            let key = split.next().unwrap();
-            let parsed = Self::parse_key(key);
-            if let Event::Key(parsed) = parsed {
-                match modifier {
-                    "Shift" => Some(Event::Shift(parsed)),
-                    "Alt" => Some(Event::Alt(parsed)),
-                    "Ctrl" => Some(Event::Ctrl(parsed)),
-                    _ => None,
-                }
-            } else if let Event::Char(parsed) = parsed {
-                match modifier {
-                    "Shift" => Some(Event::Char(parsed.to_uppercase().next().unwrap())),
-                    "Alt" => Some(Event::AltChar(parsed)),
-                    "Ctrl" => Some(Event::CtrlChar(parsed)),
-                    _ => None,
-                }
-            } else {
-                None
-            }
-        } else {
-            Some(Self::parse_key(kb))
-        }
+        cursive.add_global_callback(Event::Shift(Key::Up), move |siv| send_command(siv, Command::Shift(ShiftMode::Up, None)));
+        cursive.add_global_callback(Event::Shift(Key::Down), move |siv| send_command(siv, Command::Shift(ShiftMode::Down, None)));
     }
 }

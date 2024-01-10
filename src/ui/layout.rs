@@ -12,7 +12,7 @@ use cursive::views::EditView;
 use cursive::{Cursive, Printer};
 use unicode_width::UnicodeWidthStr;
 
-use crate::application::UserData;
+use crate::application::send_command;
 use crate::command::{self, Command, JumpMode};
 use crate::commands::CommandResult;
 use crate::events;
@@ -60,9 +60,7 @@ impl Layout {
 
                 // 5. Send a jump command with the search query to the command manager.
                 let command = Command::Jump(JumpMode::Query(cmd_without_prefix.to_string()));
-                if let Some(data) = s.user_data::<UserData>().cloned() {
-                    data.cmd.handle(s, command);
-                }
+                send_command(s, command);
             } else {
                 // 4. If it is an actual command...
 
@@ -70,10 +68,8 @@ impl Layout {
                 match command::parse(cmd_without_prefix) {
                     Ok(commands) => {
                         // 6. Send the parsed command to the command manager.
-                        if let Some(data) = s.user_data::<UserData>().cloned() {
-                            for cmd in commands {
-                                data.cmd.handle(s, cmd);
-                            }
+                        for cmd in commands {
+                            send_command(s, cmd);
                         }
                     }
                     Err(err) => {

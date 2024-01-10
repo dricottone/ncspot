@@ -15,7 +15,7 @@ use signal_hook::{consts::SIGHUP, consts::SIGTERM};
 use signal_hook_tokio::Signals;
 
 use crate::command::Command;
-use crate::commands::CommandManager;
+use crate::commands::{CommandManager};
 use crate::config::Config;
 use crate::events::{Event, EventManager};
 use crate::library::Library;
@@ -59,11 +59,7 @@ async fn handle_signals(cursive_callback_sink: CbSink) {
         match signal {
             SIGTERM | SIGHUP => {
                 cursive_callback_sink
-                    .send(Box::new(|cursive| {
-                        if let Some(data) = cursive.user_data::<UserData>().cloned() {
-                            data.cmd.handle(cursive, Command::Quit);
-                        }
-                    }))
+                    .send(Box::new(|siv| send_command(siv, Command::Quit)))
                     .expect("can't send callback to cursive");
             }
             _ => unreachable!(),
@@ -71,9 +67,17 @@ async fn handle_signals(cursive_callback_sink: CbSink) {
     }
 }
 
+/// Store reference to the commands manager within user data.
 pub type UserData = Rc<UserDataInner>;
 pub struct UserDataInner {
     pub cmd: CommandManager,
+}
+
+/// Extract the command manager from user data and dispatch a command into it.
+pub fn send_command(siv: &mut Cursive, command: Command) {
+    if let Some(data) = siv.user_data::<UserData>().cloned() {
+        data.cmd.handle(siv, command);
+    }
 }
 
 /// The global Tokio runtime for running asynchronous tasks.
