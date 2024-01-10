@@ -197,10 +197,6 @@ impl CommandManager {
                     )
                 })?;
 
-                // update theme
-                let theme = self.config.build_theme();
-                s.set_theme(theme);
-
                 Ok(None)
             }
             Command::NewPlaylist(name) => {

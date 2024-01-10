@@ -2,6 +2,7 @@ use std::path::Path;
 use std::rc::Rc;
 use std::sync::{Arc, OnceLock};
 
+use cursive::theme::{BaseColor, BorderStyle, Palette, PaletteColor, Theme};
 use cursive::traits::Nameable;
 use cursive::{CbSink, Cursive, CursiveRunner};
 use log::{error, info, trace};
@@ -90,6 +91,38 @@ pub struct Application {
     cursive: CursiveRunner<Cursive>,
 }
 
+pub fn default_theme() -> Theme {
+    let mut palette = Palette::default();
+    let borders = BorderStyle::Simple;
+
+    palette[PaletteColor::Background] = BaseColor::Black.dark();
+    palette[PaletteColor::View] = BaseColor::Black.dark();
+    palette[PaletteColor::Primary] = BaseColor::White.light();
+    palette[PaletteColor::Secondary] = BaseColor::Black.light();
+    palette[PaletteColor::TitlePrimary] = BaseColor::Green.dark();
+    palette[PaletteColor::HighlightText] = BaseColor::White.light();
+    palette[PaletteColor::Highlight] = BaseColor::Black.light();
+    palette[PaletteColor::HighlightInactive] = BaseColor::Black.dark();
+    palette.set_color("playing", BaseColor::Green.dark());
+    palette.set_color("playing_selected", BaseColor::Green.dark());
+    palette.set_color("playing_bg", BaseColor::Black.light());
+    palette.set_color("error", BaseColor::White.light());
+    palette.set_color("error_bg", BaseColor::Red.dark());
+    palette.set_color("statusbar_progress", BaseColor::Green.dark());
+    palette.set_color("statusbar_progress_bg", BaseColor::Black.light());
+    palette.set_color("statusbar", BaseColor::Black.dark());
+    palette.set_color("statusbar_bg", BaseColor::Green.dark());
+    palette.set_color("cmdline", BaseColor::White.light());
+    palette.set_color("cmdline_bg", BaseColor::Black.dark());
+    palette.set_color("search_match", BaseColor::Yellow.dark());
+
+    Theme {
+        shadow: false,
+        palette,
+        borders,
+    }
+}
+
 impl Application {
     /// Create a new ncspot application.
     ///
@@ -111,11 +144,11 @@ impl Application {
 
         let configuration = Arc::new(Config::new(configuration_file_path));
         let credentials = authentication::get_credentials(&configuration)?;
-        let theme = configuration.build_theme();
 
         // DON'T USE STDOUT AFTER THIS CALL!
         let mut cursive = create_cursive().map_err(|error| error.to_string())?;
 
+        let theme = default_theme();
         cursive.set_theme(theme.clone());
 
         #[cfg(all(unix, feature = "pancurses_backend"))]

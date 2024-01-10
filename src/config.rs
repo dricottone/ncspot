@@ -4,7 +4,6 @@ use std::path::PathBuf;
 use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::{fs, process};
 
-use cursive::theme::Theme;
 use log::{debug, error};
 use ncspot::CONFIGURATION_FILE_NAME;
 use platform_dirs::AppDirs;
@@ -62,7 +61,6 @@ impl TrackFormat {
 pub struct ConfigValues {
     pub command_key: Option<char>,
     pub initial_screen: Option<String>,
-    pub theme: Option<ConfigTheme>,
     pub flip_status_indicators: Option<bool>,
     pub audio_cache: Option<bool>,
     pub audio_cache_size: Option<u32>,
@@ -89,31 +87,6 @@ pub struct Credentials {
     pub password_cmd: Option<String>,
 }
 
-/// The ncspot theme.
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct ConfigTheme {
-    pub background: Option<String>,
-    pub primary: Option<String>,
-    pub secondary: Option<String>,
-    pub title: Option<String>,
-    pub playing: Option<String>,
-    pub playing_selected: Option<String>,
-    pub playing_bg: Option<String>,
-    pub highlight: Option<String>,
-    pub highlight_bg: Option<String>,
-    pub highlight_inactive_bg: Option<String>,
-    pub error: Option<String>,
-    pub error_bg: Option<String>,
-    pub statusbar_progress: Option<String>,
-    pub statusbar_progress_bg: Option<String>,
-    pub statusbar: Option<String>,
-    pub statusbar_bg: Option<String>,
-    pub cmdline: Option<String>,
-    pub cmdline_bg: Option<String>,
-    pub search_match: Option<String>,
-}
-
-/// The ordering that is used when representing a playlist.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SortingOrder {
     pub key: SortKey,
@@ -236,11 +209,6 @@ impl Config {
         if let Err(e) = CBOR.write(path, self.state().clone()) {
             error!("Could not save user state: {}", e);
         }
-    }
-
-    pub fn build_theme(&self) -> Theme {
-        let theme = &self.values().theme;
-        crate::theme::load(theme)
     }
 
     /// Attempt to reload the configuration from the configuration file.
