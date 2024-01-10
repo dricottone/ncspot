@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use crate::application::UserData;
 use crate::command::{
-    parse, Command, GotoMode, JumpMode, MoveAmount, MoveMode, SeekDirection, ShiftMode, TargetMode,
+    Command, GotoMode, JumpMode, MoveAmount, MoveMode, SeekDirection, ShiftMode, TargetMode,
 };
 use crate::config::{user_configuration_directory, Config};
 use crate::events::EventManager;
@@ -26,7 +26,6 @@ use cursive::views::Dialog;
 use cursive::Cursive;
 use log::{debug, error, info};
 use ncspot::CONFIGURATION_FILE_NAME;
-use std::cell::RefCell;
 
 pub enum CommandResult {
     Consumed(Option<String>),
@@ -37,7 +36,7 @@ pub enum CommandResult {
 
 pub struct CommandManager {
     aliases: HashMap<String, String>,
-    bindings: RefCell<HashMap<String, Vec<Command>>>,
+    bindings: HashMap<String, Vec<Command>>,
     spotify: Spotify,
     queue: Arc<Queue>,
     library: Arc<Library>,
@@ -53,43 +52,15 @@ impl CommandManager {
         config: Arc<Config>,
         events: EventManager,
     ) -> Self {
-        let bindings = RefCell::new(Self::get_bindings(&config));
         Self {
             aliases: HashMap::new(),
-            bindings,
+            bindings: Self::default_keybindings(),
             spotify,
             queue,
             library,
             config,
             events,
         }
-    }
-
-    pub fn get_bindings(config: &Config) -> HashMap<String, Vec<Command>> {
-        let config = config.values();
-        let mut kb = if config.default_keybindings.unwrap_or(true) {
-            Self::default_keybindings()
-        } else {
-            HashMap::new()
-        };
-        let custom_bindings: Option<HashMap<String, String>> = config.keybindings.clone();
-
-        for (key, commands) in custom_bindings.unwrap_or_default() {
-            match parse(&commands) {
-                Ok(cmds) => {
-                    info!("Custom keybinding: {} -> {:?}", key, cmds);
-                    kb.insert(key, cmds);
-                }
-                Err(err) => {
-                    error!(
-                        "Invalid command(s) for key {}-\"{}\": {}",
-                        key, commands, err
-                    );
-                }
-            }
-        }
-
-        kb
     }
 
     pub fn register_aliases<S: Into<String>>(&mut self, name: S, aliases: Vec<S>) {
@@ -209,7 +180,7 @@ impl CommandManager {
                 Ok(None)
             }
             Command::Help => {
-                let view = Box::new(HelpView::new(self.bindings.borrow().clone()));
+                let view = Box::new(HelpView::new(self.bindings.clone()));
                 s.call_on_name("main", move |v: &mut Layout| v.push_view(view));
                 Ok(None)
             }
@@ -230,10 +201,6 @@ impl CommandManager {
                 let theme = self.config.build_theme();
                 s.set_theme(theme);
 
-                // update bindings
-                self.unregister_keybindings(s);
-                self.bindings.replace(Self::get_bindings(&self.config));
-                self.register_keybindings(s);
                 Ok(None)
             }
             Command::NewPlaylist(name) => {
@@ -381,20 +348,8 @@ impl CommandManager {
         });
     }
 
-    pub fn unregister_keybindings(&self, cursive: &mut Cursive) {
-        let kb = self.bindings.borrow();
-
-        for (k, _v) in kb.iter() {
-            if let Some(binding) = Self::parse_keybinding(k) {
-                cursive.clear_global_callbacks(binding);
-            }
-        }
-    }
-
     pub fn register_keybindings(&self, cursive: &mut Cursive) {
-        let kb = self.bindings.borrow();
-
-        for (k, v) in kb.iter() {
+        for (k, v) in self.bindings.iter() {
             if let Some(binding) = Self::parse_keybinding(k) {
                 self.register_keybinding(cursive, binding, v.clone());
             } else {

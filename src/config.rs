@@ -62,8 +62,6 @@ impl TrackFormat {
 pub struct ConfigValues {
     pub command_key: Option<char>,
     pub initial_screen: Option<String>,
-    pub default_keybindings: Option<bool>,
-    pub keybindings: Option<HashMap<String, String>>,
     pub theme: Option<ConfigTheme>,
     pub flip_status_indicators: Option<bool>,
     pub audio_cache: Option<bool>,
