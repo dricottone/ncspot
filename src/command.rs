@@ -3,22 +3,20 @@ use std::fmt;
 
 use strum_macros::Display;
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Debug)]
 pub enum SeekInterval {
     Forward,
     Backwards,
     Custom(usize),
 }
 
-#[derive(Display, Clone, Serialize, Deserialize, Debug)]
-#[strum(serialize_all = "lowercase")]
+#[derive(Display, Clone, Debug)]
 pub enum TargetMode {
     Current,
     Selected,
 }
 
-#[derive(Display, Clone, Serialize, Deserialize, Debug)]
-#[strum(serialize_all = "lowercase")]
+#[derive(Display, Clone, Debug)]
 pub enum MoveMode {
     Up,
     Down,
@@ -27,8 +25,7 @@ pub enum MoveMode {
     Playing,
 }
 
-#[derive(Display, Clone, Serialize, Deserialize, Debug)]
-#[strum(serialize_all = "lowercase")]
+#[derive(Display, Clone, Debug)]
 pub enum MoveAmount {
     Integer(i32),
     Float(f32),
@@ -42,8 +39,7 @@ impl Default for MoveAmount {
 }
 
 /// Keys that can be used to sort songs on.
-#[derive(Display, Clone, Serialize, Deserialize, Debug)]
-#[strum(serialize_all = "lowercase")]
+#[derive(Display, Clone, Debug)]
 pub enum SortKey {
     Title,
     Duration,
@@ -52,36 +48,32 @@ pub enum SortKey {
     Added,
 }
 
-#[derive(Display, Clone, Serialize, Deserialize, Debug)]
-#[strum(serialize_all = "lowercase")]
+#[derive(Display, Clone, Debug)]
 pub enum SortDirection {
     Ascending,
     Descending,
 }
 
-#[derive(Display, Clone, Serialize, Deserialize, Debug)]
-#[strum(serialize_all = "lowercase")]
+#[derive(Display, Clone, Debug)]
 pub enum JumpMode {
     Previous,
     Next,
     Query(String),
 }
 
-#[derive(Display, Clone, Serialize, Deserialize, Debug)]
-#[strum(serialize_all = "lowercase")]
+#[derive(Display, Clone, Debug)]
 pub enum ShiftMode {
     Up,
     Down,
 }
 
-#[derive(Display, Clone, Serialize, Deserialize, Debug)]
-#[strum(serialize_all = "lowercase")]
+#[derive(Display, Clone, Debug)]
 pub enum GotoMode {
     Album,
     Artist,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Debug)]
 pub enum SeekDirection {
     Relative(i32),
     Absolute(u32),
@@ -99,7 +91,7 @@ impl fmt::Display for SeekDirection {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Debug)]
 pub enum Command {
     Quit,
     TogglePlay,

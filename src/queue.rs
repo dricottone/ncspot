@@ -12,13 +12,10 @@ use crate::spotify::PlayerEvent;
 use crate::spotify::Spotify;
 
 /// Repeat behavior for the [Queue].
-#[derive(Display, Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
+#[derive(Display, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum RepeatSetting {
-    #[serde(rename = "off")]
     None,
-    #[serde(rename = "playlist")]
     RepeatPlaylist,
-    #[serde(rename = "track")]
     RepeatTrack,
 }
 
