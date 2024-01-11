@@ -33,7 +33,6 @@ pub struct ConfigValues {
     pub volnorm_pregain: Option<f64>,
     pub bitrate: Option<u32>,
     pub gapless: Option<bool>,
-    pub shuffle: Option<bool>,
     pub repeat: Option<queue::RepeatSetting>,
     pub playback_state: Option<PlaybackState>,
     pub statusbar_format: Option<String>,
@@ -57,7 +56,6 @@ pub struct QueueState {
 /// Runtime state that should be persisted accross sessions.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserState {
-    pub shuffle: bool,
     pub repeat: queue::RepeatSetting,
     pub queuestate: QueueState,
     pub playlist_orders: HashMap<String, SortingOrder>,
@@ -68,7 +66,6 @@ pub struct UserState {
 impl Default for UserState {
     fn default() -> Self {
         Self {
-            shuffle: false,
             repeat: queue::RepeatSetting::None,
             queuestate: QueueState::default(),
             playlist_orders: HashMap::new(),
@@ -100,10 +97,6 @@ impl Config {
             CBOR.load_or_generate_default(path, || Ok(UserState::default()), true)
                 .expect("could not load user state")
         };
-
-        if let Some(shuffle) = values.shuffle {
-            userstate.shuffle = shuffle;
-        }
 
         if let Some(repeat) = values.repeat {
             userstate.repeat = repeat;

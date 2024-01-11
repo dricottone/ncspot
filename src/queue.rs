@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::sync::atomic::{AtomicBool,Ordering as AtomicOrdering};
 use std::sync::{Arc, RwLock};
 
 use log::{debug, info};
@@ -42,6 +43,7 @@ pub struct Queue {
     current_track: RwLock<Option<usize>>,
     spotify: Spotify,
     cfg: Arc<Config>,
+    shuffle: Arc<AtomicBool>,
 }
 
 impl Queue {
@@ -54,6 +56,7 @@ impl Queue {
             current_track: RwLock::new(queue_state.current_track),
             random_order: RwLock::new(queue_state.random_order),
             cfg,
+            shuffle: Arc::new(AtomicBool::new(false)),
         };
 
         if let Some(playable) = queue.get_current() {
@@ -401,7 +404,7 @@ impl Queue {
 
     /// Get the current shuffle behavior.
     pub fn get_shuffle(&self) -> bool {
-        self.cfg.state().shuffle
+        self.shuffle.load(AtomicOrdering::Relaxed)
     }
 
     /// Get the current order that is used to shuffle.
@@ -430,7 +433,7 @@ impl Queue {
 
     /// Set the current shuffle behavior.
     pub fn set_shuffle(&self, new: bool) {
-        self.cfg.with_state_mut(|mut s| s.shuffle = new);
+        self.shuffle.store(new, AtomicOrdering::Relaxed);
         if new {
             self.generate_random_order();
         } else {
