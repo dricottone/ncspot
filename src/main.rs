@@ -6,7 +6,9 @@ extern crate serde;
 use std::path::PathBuf;
 
 use application::{setup_logging, Application};
-use ncspot::program_arguments;
+
+use clap::builder::PathBufValueParser;
+use librespot_playback::audio_backend;
 
 mod application;
 mod authentication;
@@ -27,6 +29,28 @@ mod spotify_worker;
 mod traits;
 mod ui;
 mod utils;
+
+pub fn program_arguments() -> clap::Command {
+    let backends = {
+        let backends: Vec<&str> = audio_backend::BACKENDS.iter().map(|b| b.0).collect();
+        format!("Audio backends: {}", backends.join(", "))
+    };
+
+    clap::Command::new("ncspot")
+        .version(env!("VERSION"))
+        .author("Henrik Friedrichsen <henrik@affekt.org> and contributors")
+        .about("cross-platform ncurses Spotify client")
+        .after_help(backends)
+        .arg(
+            clap::Arg::new("debug")
+                .short('d')
+                .long("debug")
+                .value_name("FILE")
+                .value_parser(PathBufValueParser::new())
+                .help("Enable debug logging to the specified file"),
+        )
+        .subcommands([clap::Command::new("info").about("Print platform information like paths")])
+}
 
 fn main() {
     // Set a custom backtrace hook that writes the backtrace to a file instead of stdout, since
