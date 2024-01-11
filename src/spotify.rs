@@ -117,6 +117,7 @@ impl Spotify {
     }
 
     pub fn test_credentials(credentials: Credentials) -> Result<Session, SessionError> {
+        debug!("Testing credentials with dummy session");
         let config = Self::session_config();
         ASYNC_RUNTIME
             .get()
@@ -126,12 +127,13 @@ impl Spotify {
     }
 
     async fn create_session(credentials: Credentials) -> Result<Session, SessionError> {
+        debug!("Creating session");
+
         let librespot_cache_path = cache_path("librespot");
         let audio_cache_path = librespot_cache_path.join("files");
         let cache = Cache::new(Some(librespot_cache_path), None, Some(audio_cache_path), None)
             .expect("Could not create cache");
 
-        debug!("opening spotify session");
         let session_config = Self::session_config();
         Session::connect(session_config, credentials, Some(cache), true)
             .await
