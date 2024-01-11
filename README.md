@@ -24,3 +24,13 @@ I have made these additional changes:
  + swapped `platform_dirs` for `dirs`
  + refactored various helper functions based on the above removals
 
+To what effect?
+Taking into account that ~3000 lines deleted are documentation or toolchain...
+
+```
+$ git diff origin/main HEAD --stat | tail -n 1
+69 files changed, 523 insertions(+), 6340 deletions(-)
+```
+
+An approximate net -3000 lines of code.
+
