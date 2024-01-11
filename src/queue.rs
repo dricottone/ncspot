@@ -7,7 +7,7 @@ use log::{debug, info};
 use rand::prelude::*;
 use strum_macros::Display;
 
-use crate::config::{Config, PlaybackState};
+use crate::config::Config;
 use crate::model::playable::Playable;
 use crate::spotify::PlayerEvent;
 use crate::spotify::Spotify;
@@ -49,7 +49,7 @@ pub struct Queue {
 impl Queue {
     pub fn new(spotify: Spotify, cfg: Arc<Config>) -> Self {
         let queue_state = cfg.state().queuestate.clone();
-        let playback_state = cfg.state().playback_state.clone();
+
         let queue = Self {
             queue: Arc::new(RwLock::new(queue_state.queue)),
             spotify: spotify.clone(),
@@ -58,23 +58,6 @@ impl Queue {
             shuffle: Arc::new(AtomicBool::new(false)),
             repeat: RwLock::new(RepeatSetting::None),
         };
-
-        if let Some(playable) = queue.get_current() {
-            spotify.load(
-                &playable,
-                playback_state == PlaybackState::Playing,
-                queue_state.track_progress.as_millis() as u32,
-            );
-            spotify.update_track();
-            match playback_state {
-                PlaybackState::Stopped => {
-                    spotify.stop();
-                }
-                PlaybackState::Paused | PlaybackState::Playing | PlaybackState::Default => {
-                    spotify.pause();
-                }
-            }
-        }
 
         queue
     }

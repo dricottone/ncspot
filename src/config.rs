@@ -11,15 +11,6 @@ use crate::serialization::{Serializer, CBOR, TOML};
 
 pub const CLIENT_ID: &str = "d420a117a32841c2b3474932e49fb54b";
 
-/// The playback state when ncspot is started.
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub enum PlaybackState {
-    Playing,
-    Paused,
-    Stopped,
-    Default,
-}
-
 /// The configuration of ncspot.
 #[derive(Clone, Serialize, Deserialize, Debug, Default)]
 pub struct ConfigValues {
@@ -32,7 +23,6 @@ pub struct ConfigValues {
     pub volnorm_pregain: Option<f64>,
     pub bitrate: Option<u32>,
     pub gapless: Option<bool>,
-    pub playback_state: Option<PlaybackState>,
     pub statusbar_format: Option<String>,
 }
 
@@ -57,7 +47,6 @@ pub struct UserState {
     pub queuestate: QueueState,
     pub playlist_orders: HashMap<String, SortingOrder>,
     pub cache_version: u16,
-    pub playback_state: PlaybackState,
 }
 
 impl Default for UserState {
@@ -66,7 +55,6 @@ impl Default for UserState {
             queuestate: QueueState::default(),
             playlist_orders: HashMap::new(),
             cache_version: 0,
-            playback_state: PlaybackState::Default,
         }
     }
 }
@@ -88,15 +76,11 @@ impl Config {
                 .expect("There is an error in your configuration file")
         };
 
-        let mut userstate = {
+        let userstate = {
             let path = config_path("userstate.cbor");
             CBOR.load_or_generate_default(path, || Ok(UserState::default()), true)
                 .expect("could not load user state")
         };
-
-        if let Some(playback_state) = values.playback_state.clone() {
-            userstate.playback_state = playback_state;
-        }
 
         Self {
             values: RwLock::new(values),
