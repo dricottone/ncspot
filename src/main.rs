@@ -20,7 +20,6 @@ mod library;
 mod model;
 mod panic;
 mod queue;
-mod serialization;
 mod spotify;
 mod spotify_api;
 mod spotify_url;

@@ -35,22 +35,10 @@ impl StatusBar {
 
     fn playback_indicator(&self) -> &str {
         let status = self.spotify.get_current_status();
-        let flipped = self
-            .library
-            .cfg
-            .values()
-            .flip_status_indicators
-            .unwrap_or(false);
-
-        let indicators = match flipped {
-            false => ("▶ ", "▮▮", "◼ "),
-            true => ("▮▮", "▶ ", "▶ "),
-        };
-
         match status {
-            PlayerEvent::Playing(_) => indicators.0,
-            PlayerEvent::Paused(_) => indicators.1,
-            PlayerEvent::Stopped | PlayerEvent::FinishedTrack => indicators.2,
+            PlayerEvent::Playing(_) => "▶ ",
+            PlayerEvent::Paused(_) => "▮▮",
+            PlayerEvent::Stopped | PlayerEvent::FinishedTrack => "◼ ",
         }
     }
 
@@ -62,14 +50,7 @@ impl StatusBar {
     }
 
     fn format_track(&self, t: &Playable) -> String {
-        let format = self
-            .library
-            .cfg
-            .values()
-            .statusbar_format
-            .clone()
-            .unwrap_or_else(|| "%artists - %title".to_string());
-        Playable::format(t, &format, &self.library)
+        Playable::format(t, "%artists - %title", &self.library)
     }
 }
 

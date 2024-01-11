@@ -1,44 +1,7 @@
 use std::path::PathBuf;
-use std::sync::{RwLock, RwLockReadGuard};
 use std::fs;
 
 use dirs;
-
-use crate::serialization::{Serializer, TOML};
-
-pub const CLIENT_ID: &str = "d420a117a32841c2b3474932e49fb54b";
-
-/// The configuration of ncspot.
-#[derive(Clone, Serialize, Deserialize, Debug, Default)]
-pub struct ConfigValues {
-    pub flip_status_indicators: Option<bool>,
-    pub statusbar_format: Option<String>,
-}
-
-/// The complete configuration (state + user configuration) of ncspot.
-pub struct Config {
-    /// Configuration set by the user, read only.
-    values: RwLock<ConfigValues>,
-}
-
-impl Config {
-    /// Generate the configuration from the user configuration file and the runtime state file.
-    pub fn new() -> Self {
-        let values = {
-            let path = config_path("config.toml");
-            TOML.load_or_generate_default(path, || Ok(ConfigValues::default()), false)
-                .expect("There is an error in your configuration file")
-        };
-
-        Self {
-            values: RwLock::new(values),
-        }
-    }
-
-    pub fn values(&self) -> RwLockReadGuard<ConfigValues> {
-        self.values.read().expect("can't readlock config values")
-    }
-}
 
 /// Return the path to the current user's configuration directory. This
 /// function does not guarantee correct permissions or ownership of the

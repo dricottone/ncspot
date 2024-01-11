@@ -10,7 +10,7 @@ use rspotify::model::Id;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::config::{Config,cache_path};
+use crate::config::cache_path;
 use crate::events::EventManager;
 use crate::model::album::Album;
 use crate::model::artist::Artist;
@@ -37,11 +37,10 @@ pub struct Library {
     pub display_name: Option<String>,
     ev: EventManager,
     spotify: Spotify,
-    pub cfg: Arc<Config>,
 }
 
 impl Library {
-    pub fn new(ev: EventManager, spotify: Spotify, cfg: Arc<Config>) -> Self {
+    pub fn new(ev: EventManager, spotify: Spotify) -> Self {
         let current_user = spotify.api.current_user();
         let user_id = current_user.as_ref().map(|u| u.id.id().to_string());
         let display_name = current_user.as_ref().and_then(|u| u.display_name.clone());
@@ -57,7 +56,6 @@ impl Library {
             display_name,
             ev,
             spotify,
-            cfg,
         };
 
         library.update_library();

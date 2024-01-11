@@ -16,7 +16,6 @@ use signal_hook_tokio::Signals;
 
 use crate::command::Command;
 use crate::commands::{CommandManager};
-use crate::config::Config;
 use crate::events::{Event, EventManager};
 use crate::library::Library;
 use crate::queue::Queue;
@@ -142,7 +141,6 @@ impl Application {
             )
             .unwrap();
 
-        let configuration = Arc::new(Config::new());
         let credentials = authentication::get_credentials()?;
 
         // DON'T USE STDOUT AFTER THIS CALL!
@@ -157,38 +155,19 @@ impl Application {
         });
 
         let event_manager = EventManager::new(cursive.cb_sink().clone());
-
-        let spotify =
-            spotify::Spotify::new(event_manager.clone(), credentials);
-
-        let library = Arc::new(Library::new(
-            event_manager.clone(),
-            spotify.clone(),
-            configuration.clone(),
-        ));
-
+        let spotify = spotify::Spotify::new(event_manager.clone(), credentials);
+        let library = Arc::new(Library::new(event_manager.clone(), spotify.clone()));
         let queue = Arc::new(queue::Queue::new(spotify.clone()));
-
-        let cmd_manager = CommandManager::new(
-            spotify.clone(),
-            queue.clone(),
-            library.clone(),
-            event_manager.clone(),
-        );
+        let cmd_manager = CommandManager::new(spotify.clone(), queue.clone(), library.clone(), event_manager.clone());
 
         cmd_manager.register_keybindings(&mut cursive);
 
         cursive.set_user_data(Rc::new(UserDataInner { cmd: cmd_manager }));
 
-        let search =
-            ui::search::SearchView::new(event_manager.clone(), queue.clone(), library.clone());
-
+        let search = ui::search::SearchView::new(event_manager.clone(), queue.clone(), library.clone());
         let libraryview = ui::library::LibraryView::new(queue.clone(), library.clone());
-
         let queueview = ui::queue::QueueView::new(queue.clone(), library.clone());
-
         let status = ui::statusbar::StatusBar::new(queue.clone(), Arc::clone(&library));
-
         let mut layout =
             ui::layout::Layout::new(status, &event_manager, theme)
                 .screen("search", search.with_name("search"))

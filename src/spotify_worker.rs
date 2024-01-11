@@ -1,4 +1,3 @@
-use crate::config;
 use crate::events::{Event, EventManager};
 use crate::model::playable::Playable;
 use crate::queue::QueueEvent;
@@ -17,6 +16,8 @@ use tokio::sync::mpsc;
 use tokio::time;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use tokio_stream::StreamExt;
+
+const CLIENT_ID: &str = "d420a117a32841c2b3474932e49fb54b";
 
 #[derive(Debug)]
 pub(crate) enum WorkerCommand {
@@ -64,7 +65,7 @@ impl Worker {
     }
 
     fn get_token(&self, sender: Sender<Option<Token>>) -> Pin<Box<dyn Future<Output = ()> + Send>> {
-        let client_id = config::CLIENT_ID;
+        let client_id = CLIENT_ID;
         let scopes = "user-read-private,playlist-read-private,playlist-read-collaborative,playlist-modify-public,playlist-modify-private,user-follow-modify,user-follow-read,user-library-read,user-library-modify,user-top-read,user-read-recently-played";
         let url =
             format!("hm://keymaster/token/authenticated?client_id={client_id}&scope={scopes}");
