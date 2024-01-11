@@ -1,7 +1,6 @@
-use crate::config::{user_cache_directory, user_configuration_directory};
-
+use crate::fs::{user_cache_directory, user_configuration_directory};
 #[cfg(unix)]
-use crate::utils::user_runtime_directory;
+use crate::fs::user_runtime_directory;
 
 /// Print platform info like which platform directories will be used.
 pub fn info() {

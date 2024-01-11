@@ -1,5 +1,4 @@
-use std::{fmt::Write, path::PathBuf};
-use dirs;
+use std::fmt::Write;
 
 /// Returns a human readable String of a Duration
 ///
@@ -40,22 +39,4 @@ pub fn ms_to_hms(duration: u32) -> String {
     formated_time.push_str(&format!("{seconds:02}"));
 
     formated_time
-}
-
-/// Return the path to the current user's runtime directory. This function does
-/// not guarantee correct ownership or permissions of the directory.
-#[cfg(unix)]
-pub fn user_runtime_directory() -> PathBuf {
-    let user_runtime_directory = dirs::runtime_dir();
-    let mut system_runtime_directory = PathBuf::from("/tmp/");
-
-    if let Some(mut runtime_dir) = user_runtime_directory {
-        runtime_dir.push("ncspot");
-        runtime_dir
-    } else if system_runtime_directory.exists() {
-        system_runtime_directory.push(format!("ncspot-{}", unsafe { libc::getuid() }));
-        system_runtime_directory
-    } else {
-        user_runtime_directory.unwrap()
-    }
 }

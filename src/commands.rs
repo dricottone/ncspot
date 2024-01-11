@@ -7,6 +7,7 @@ use crate::command::{
 };
 use crate::events::EventManager;
 use crate::ext_traits::CursiveExt;
+use crate::fs::cache_path;
 use crate::library::Library;
 use crate::queue::{Queue, RepeatSetting};
 use crate::spotify::{Spotify, VOLUME_PERCENT};
@@ -18,6 +19,7 @@ use crate::ui::help::HelpView;
 use crate::ui::layout::Layout;
 use crate::ui::modal::Modal;
 use crate::ui::search_results::SearchResultsView;
+
 use cursive::event::{Event, Key};
 use cursive::traits::View;
 use cursive::views::Dialog;
@@ -177,7 +179,7 @@ impl CommandManager {
             Command::Logout => {
                 self.spotify.shutdown();
 
-                let mut credentials_path = crate::config::cache_path("librespot");
+                let mut credentials_path = cache_path("librespot");
                 credentials_path.push("credentials.json");
                 std::fs::remove_file(credentials_path).unwrap();
 

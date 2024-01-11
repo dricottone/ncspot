@@ -10,8 +10,8 @@ use rspotify::model::Id;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::config::cache_path;
 use crate::events::EventManager;
+use crate::fs::cache_path;
 use crate::model::album::Album;
 use crate::model::artist::Artist;
 use crate::model::playable::Playable;

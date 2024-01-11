@@ -25,8 +25,8 @@ use std::sync::{Arc, RwLock};
 use std::time::{Duration, SystemTime};
 
 use crate::application::ASYNC_RUNTIME;
-use crate::config;
 use crate::events::{Event, EventManager};
+use crate::fs::cache_path;
 use crate::model::playable::Playable;
 use crate::spotify_api::WebApi;
 use crate::spotify_worker::{Worker, WorkerCommand};
@@ -126,7 +126,7 @@ impl Spotify {
     }
 
     async fn create_session(credentials: Credentials) -> Result<Session, SessionError> {
-        let librespot_cache_path = config::cache_path("librespot");
+        let librespot_cache_path = cache_path("librespot");
         let audio_cache_path = librespot_cache_path.join("files");
         let cache = Cache::new(Some(librespot_cache_path), None, Some(audio_cache_path), None)
             .expect("Could not create cache");

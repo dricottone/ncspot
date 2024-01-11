@@ -3,20 +3,20 @@ use cursive::view::Nameable;
 use cursive::views::*;
 use cursive::Cursive;
 
+use crate::fs::cache_path;
+use crate::spotify::Spotify;
+use crate::ui::create_cursive;
+
 use librespot_core::authentication::Credentials as RespotCredentials;
 use librespot_core::cache::Cache;
 use librespot_protocol::authentication::AuthenticationType;
-
-use crate::config;
-use crate::spotify::Spotify;
-use crate::ui::create_cursive;
 
 /// Get credentials for use with librespot. This first tries to get cached credentials. If no cached
 /// credentials are available, it will either try to get them from the user configured commands, or
 /// if that fails, it will prompt the user on stdout.
 pub fn get_credentials() -> Result<RespotCredentials, String> {
     let mut credentials = {
-        let cache = Cache::new(Some(config::cache_path("librespot")), None, None, None)
+        let cache = Cache::new(Some(cache_path("librespot")), None, None, None)
             .expect("Could not create librespot cache");
         let cached_credentials = cache.credentials();
         match cached_credentials {
