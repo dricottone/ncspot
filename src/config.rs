@@ -6,7 +6,6 @@ use std::fs;
 use dirs;
 
 use crate::command::{SortDirection, SortKey};
-use crate::model::playable::Playable;
 use crate::serialization::{Serializer, CBOR, TOML};
 
 pub const CLIENT_ID: &str = "d420a117a32841c2b3474932e49fb54b";
@@ -32,19 +31,9 @@ pub struct SortingOrder {
     pub direction: SortDirection,
 }
 
-/// The runtime state of the music queue.
-#[derive(Serialize, Default, Deserialize, Debug, Clone)]
-pub struct QueueState {
-    pub current_track: Option<usize>,
-    pub random_order: Option<Vec<usize>>,
-    pub track_progress: std::time::Duration,
-    pub queue: Vec<Playable>,
-}
-
 /// Runtime state that should be persisted accross sessions.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserState {
-    pub queuestate: QueueState,
     pub playlist_orders: HashMap<String, SortingOrder>,
     pub cache_version: u16,
 }
@@ -52,7 +41,6 @@ pub struct UserState {
 impl Default for UserState {
     fn default() -> Self {
         Self {
-            queuestate: QueueState::default(),
             playlist_orders: HashMap::new(),
             cache_version: 0,
         }

@@ -7,7 +7,6 @@ use log::{debug, info};
 use rand::prelude::*;
 use strum_macros::Display;
 
-use crate::config::Config;
 use crate::model::playable::Playable;
 use crate::spotify::PlayerEvent;
 use crate::spotify::Spotify;
@@ -47,14 +46,12 @@ pub struct Queue {
 }
 
 impl Queue {
-    pub fn new(spotify: Spotify, cfg: Arc<Config>) -> Self {
-        let queue_state = cfg.state().queuestate.clone();
-
+    pub fn new(spotify: Spotify) -> Self {
         let queue = Self {
-            queue: Arc::new(RwLock::new(queue_state.queue)),
+            queue: Arc::new(RwLock::new(Vec::new())),
             spotify: spotify.clone(),
-            current_track: RwLock::new(queue_state.current_track),
-            random_order: RwLock::new(queue_state.random_order),
+            current_track: RwLock::new(None),
+            random_order: RwLock::new(None),
             shuffle: Arc::new(AtomicBool::new(false)),
             repeat: RwLock::new(RepeatSetting::None),
         };

@@ -167,10 +167,7 @@ impl Application {
             configuration.clone(),
         ));
 
-        let queue = Arc::new(queue::Queue::new(
-            spotify.clone(),
-            configuration.clone()
-        ));
+        let queue = Arc::new(queue::Queue::new(spotify.clone()));
 
         let cmd_manager = CommandManager::new(
             spotify.clone(),
