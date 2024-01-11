@@ -1,10 +1,10 @@
 use std::path::PathBuf;
-use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::sync::{RwLock, RwLockReadGuard};
 use std::fs;
 
 use dirs;
 
-use crate::serialization::{Serializer, CBOR, TOML};
+use crate::serialization::{Serializer, TOML};
 
 pub const CLIENT_ID: &str = "d420a117a32841c2b3474932e49fb54b";
 
@@ -23,26 +23,10 @@ pub struct ConfigValues {
     pub statusbar_format: Option<String>,
 }
 
-/// Runtime state that should be persisted accross sessions.
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct UserState {
-    pub cache_version: u16,
-}
-
-impl Default for UserState {
-    fn default() -> Self {
-        Self {
-            cache_version: 0,
-        }
-    }
-}
-
 /// The complete configuration (state + user configuration) of ncspot.
 pub struct Config {
     /// Configuration set by the user, read only.
     values: RwLock<ConfigValues>,
-    /// Runtime state which can't be edited by the user, read/write.
-    state: RwLock<UserState>,
 }
 
 impl Config {
@@ -54,28 +38,13 @@ impl Config {
                 .expect("There is an error in your configuration file")
         };
 
-        let userstate = {
-            let path = config_path("userstate.cbor");
-            CBOR.load_or_generate_default(path, || Ok(UserState::default()), true)
-                .expect("could not load user state")
-        };
-
         Self {
             values: RwLock::new(values),
-            state: RwLock::new(userstate),
         }
     }
 
     pub fn values(&self) -> RwLockReadGuard<ConfigValues> {
         self.values.read().expect("can't readlock config values")
-    }
-
-    pub fn with_state_mut<F>(&self, cb: F)
-    where
-        F: Fn(RwLockWriteGuard<UserState>),
-    {
-        let state_guard = self.state.write().expect("can't writelock user state");
-        cb(state_guard);
     }
 }
 
