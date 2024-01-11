@@ -4,7 +4,6 @@ use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::fs;
 
 use dirs;
-use log::{debug, error};
 
 use crate::command::{SortDirection, SortKey};
 use crate::model::playable::Playable;
@@ -12,7 +11,6 @@ use crate::queue;
 use crate::serialization::{Serializer, CBOR, TOML};
 
 pub const CLIENT_ID: &str = "d420a117a32841c2b3474932e49fb54b";
-pub const CACHE_VERSION: u16 = 1;
 
 /// The playback state when ncspot is started.
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -137,17 +135,6 @@ impl Config {
     {
         let state_guard = self.state.write().expect("can't writelock user state");
         cb(state_guard);
-    }
-
-    pub fn save_state(&self) {
-        // update cache version number
-        self.with_state_mut(|mut state| state.cache_version = CACHE_VERSION);
-
-        let path = config_path("userstate.cbor");
-        debug!("saving user state to {}", path.display());
-        if let Err(e) = CBOR.write(path, self.state().clone()) {
-            error!("Could not save user state: {}", e);
-        }
     }
 }
 

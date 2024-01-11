@@ -5,7 +5,6 @@ use crate::application::send_command;
 use crate::command::{
     Command, GotoMode, JumpMode, MoveAmount, MoveMode, SeekDirection, ShiftMode, TargetMode,
 };
-use crate::config::Config;
 use crate::events::EventManager;
 use crate::ext_traits::CursiveExt;
 use crate::library::Library;
@@ -36,7 +35,6 @@ pub struct CommandManager {
     spotify: Spotify,
     queue: Arc<Queue>,
     library: Arc<Library>,
-    config: Arc<Config>,
     events: EventManager,
 }
 
@@ -45,14 +43,12 @@ impl CommandManager {
         spotify: Spotify,
         queue: Arc<Queue>,
         library: Arc<Library>,
-        config: Arc<Config>,
         events: EventManager,
     ) -> Self {
         Self {
             spotify,
             queue,
             library,
-            config,
             events,
         }
     }
@@ -65,19 +61,6 @@ impl CommandManager {
         match cmd {
             Command::Noop => Ok(None),
             Command::Quit => {
-                let queue = self.queue.queue.read().expect("can't readlock queue");
-                self.config.with_state_mut(move |mut s| {
-                    debug!(
-                        "saving state, {} items, current track: {:?}",
-                        queue.len(),
-                        self.queue.get_current_index()
-                    );
-                    s.queuestate.queue = queue.clone();
-                    s.queuestate.random_order = self.queue.get_random_order();
-                    s.queuestate.current_track = self.queue.get_current_index();
-                    s.queuestate.track_progress = self.spotify.get_current_progress();
-                });
-                self.config.save_state();
                 s.quit();
                 Ok(None)
             }

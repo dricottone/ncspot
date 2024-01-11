@@ -176,7 +176,6 @@ impl Application {
             spotify.clone(),
             queue.clone(),
             library.clone(),
-            configuration.clone(),
             event_manager.clone(),
         );
 

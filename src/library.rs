@@ -10,8 +10,7 @@ use rspotify::model::Id;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::config::Config;
-use crate::config::{self, CACHE_VERSION};
+use crate::config::{Config,cache_path};
 use crate::events::EventManager;
 use crate::model::album::Album;
 use crate::model::artist::Artist;
@@ -70,15 +69,6 @@ impl Library {
     }
 
     fn load_cache<T: DeserializeOwned>(&self, cache_path: PathBuf, store: Arc<RwLock<Vec<T>>>) {
-        let saved_cache_version = self.cfg.state().cache_version;
-        if saved_cache_version < CACHE_VERSION {
-            debug!(
-                "Cache version for {:?} has changed from {} to {}, ignoring cache",
-                cache_path, saved_cache_version, CACHE_VERSION
-            );
-            return;
-        }
-
         if let Ok(contents) = std::fs::read_to_string(&cache_path) {
             debug!("loading cache from {}", cache_path.display());
             let parsed: Result<Vec<T>, _> = serde_json::from_str(&contents);
@@ -135,7 +125,7 @@ impl Library {
         self.spotify.api.overwrite_playlist(id, tracks);
 
         self.fetch_playlists();
-        self.save_cache(config::cache_path(CACHE_PLAYLISTS), self.playlists.clone());
+        self.save_cache(cache_path(CACHE_PLAYLISTS), self.playlists.clone());
     }
 
     pub fn save_playlist(&self, name: &str, tracks: &[Playable]) {
@@ -154,25 +144,25 @@ impl Library {
             let t_tracks = {
                 let library = library.clone();
                 thread::spawn(move || {
-                    library.load_cache(config::cache_path(CACHE_TRACKS), library.tracks.clone());
+                    library.load_cache(cache_path(CACHE_TRACKS), library.tracks.clone());
                     library.fetch_tracks();
-                    library.save_cache(config::cache_path(CACHE_TRACKS), library.tracks.clone());
+                    library.save_cache(cache_path(CACHE_TRACKS), library.tracks.clone());
                 })
             };
 
             let t_albums = {
                 let library = library.clone();
                 thread::spawn(move || {
-                    library.load_cache(config::cache_path(CACHE_ALBUMS), library.albums.clone());
+                    library.load_cache(cache_path(CACHE_ALBUMS), library.albums.clone());
                     library.fetch_albums();
-                    library.save_cache(config::cache_path(CACHE_ALBUMS), library.albums.clone());
+                    library.save_cache(cache_path(CACHE_ALBUMS), library.albums.clone());
                 })
             };
 
             let t_artists = {
                 let library = library.clone();
                 thread::spawn(move || {
-                    library.load_cache(config::cache_path(CACHE_ARTISTS), library.artists.clone());
+                    library.load_cache(cache_path(CACHE_ARTISTS), library.artists.clone());
                     library.fetch_artists();
                 })
             };
@@ -181,12 +171,12 @@ impl Library {
                 let library = library.clone();
                 thread::spawn(move || {
                     library.load_cache(
-                        config::cache_path(CACHE_PLAYLISTS),
+                        cache_path(CACHE_PLAYLISTS),
                         library.playlists.clone(),
                     );
                     library.fetch_playlists();
                     library.save_cache(
-                        config::cache_path(CACHE_PLAYLISTS),
+                        cache_path(CACHE_PLAYLISTS),
                         library.playlists.clone(),
                     );
                 })
@@ -203,7 +193,7 @@ impl Library {
             t_artists.join().unwrap();
 
             library.populate_artists();
-            library.save_cache(config::cache_path(CACHE_ARTISTS), library.artists.clone());
+            library.save_cache(cache_path(CACHE_ARTISTS), library.artists.clone());
 
             t_albums.join().unwrap();
             t_playlists.join().unwrap();
@@ -514,7 +504,7 @@ impl Library {
                 *playlist = updated.clone();
             }
         }
-        self.save_cache(config::cache_path(CACHE_PLAYLISTS), self.playlists.clone());
+        self.save_cache(cache_path(CACHE_PLAYLISTS), self.playlists.clone());
     }
 
     pub fn is_saved_track(&self, track: &Playable) -> bool {
@@ -558,8 +548,8 @@ impl Library {
 
         self.populate_artists();
 
-        self.save_cache(config::cache_path(CACHE_TRACKS), self.tracks.clone());
-        self.save_cache(config::cache_path(CACHE_ARTISTS), self.artists.clone());
+        self.save_cache(cache_path(CACHE_TRACKS), self.tracks.clone());
+        self.save_cache(cache_path(CACHE_ARTISTS), self.artists.clone());
     }
 
     pub fn is_saved_album(&self, album: &Album) -> bool {
@@ -597,7 +587,7 @@ impl Library {
             }
         }
 
-        self.save_cache(config::cache_path(CACHE_ALBUMS), self.albums.clone());
+        self.save_cache(cache_path(CACHE_ALBUMS), self.albums.clone());
     }
 
     pub fn is_followed_artist(&self, artist: &Artist) -> bool {
@@ -638,7 +628,7 @@ impl Library {
 
         self.populate_artists();
 
-        self.save_cache(config::cache_path(CACHE_ARTISTS), self.artists.clone());
+        self.save_cache(cache_path(CACHE_ARTISTS), self.artists.clone());
     }
 
     pub fn unfollow_artist(&self, artist: &Artist) {
@@ -666,7 +656,7 @@ impl Library {
 
         self.populate_artists();
 
-        self.save_cache(config::cache_path(CACHE_ARTISTS), self.artists.clone());
+        self.save_cache(cache_path(CACHE_ARTISTS), self.artists.clone());
     }
 
     pub fn is_saved_playlist(&self, playlist: &Playlist) -> bool {
@@ -709,7 +699,7 @@ impl Library {
             }
         }
 
-        self.save_cache(config::cache_path(CACHE_PLAYLISTS), self.playlists.clone());
+        self.save_cache(cache_path(CACHE_PLAYLISTS), self.playlists.clone());
     }
 
     pub fn is_saved_show(&self, show: &Show) -> bool {
