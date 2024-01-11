@@ -3,13 +3,6 @@ use std::fmt;
 
 use strum_macros::Display;
 
-#[derive(Clone, Debug)]
-pub enum SeekInterval {
-    Forward,
-    Backwards,
-    Custom(usize),
-}
-
 #[derive(Display, Clone, Debug)]
 pub enum TargetMode {
     Current,
