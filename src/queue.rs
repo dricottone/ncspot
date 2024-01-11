@@ -42,8 +42,8 @@ pub struct Queue {
     random_order: RwLock<Option<Vec<usize>>>,
     current_track: RwLock<Option<usize>>,
     spotify: Spotify,
-    cfg: Arc<Config>,
     shuffle: Arc<AtomicBool>,
+    repeat: RwLock<RepeatSetting>,
 }
 
 impl Queue {
@@ -55,8 +55,8 @@ impl Queue {
             spotify: spotify.clone(),
             current_track: RwLock::new(queue_state.current_track),
             random_order: RwLock::new(queue_state.random_order),
-            cfg,
             shuffle: Arc::new(AtomicBool::new(false)),
+            repeat: RwLock::new(RepeatSetting::None),
         };
 
         if let Some(playable) = queue.get_current() {
@@ -345,7 +345,7 @@ impl Queue {
     pub fn next(&self, manual: bool) {
         let q = self.queue.read().unwrap();
         let current = *self.current_track.read().unwrap();
-        let repeat = self.cfg.state().repeat;
+        let repeat = self.get_repeat();
 
         if repeat == RepeatSetting::RepeatTrack && !manual {
             if let Some(index) = current {
@@ -372,7 +372,7 @@ impl Queue {
     pub fn previous(&self) {
         let q = self.queue.read().unwrap();
         let current = *self.current_track.read().unwrap();
-        let repeat = self.cfg.state().repeat;
+        let repeat = self.get_repeat();
 
         if let Some(index) = self.previous_index() {
             self.play(index, false, false);
@@ -394,12 +394,20 @@ impl Queue {
 
     /// Get the current repeat behavior.
     pub fn get_repeat(&self) -> RepeatSetting {
-        self.cfg.state().repeat
+        let repeat = self
+            .repeat
+            .read()
+            .expect("could not acquire read lock on repeat status");
+        (*repeat).clone()
     }
 
     /// Set the current repeat behavior and save it to the configuration.
     pub fn set_repeat(&self, new: RepeatSetting) {
-        self.cfg.with_state_mut(|mut s| s.repeat = new);
+        let mut repeat = self
+            .repeat
+            .write()
+            .expect("could not acquire write lock on repeat status");
+        *repeat = new;
     }
 
     /// Get the current shuffle behavior.

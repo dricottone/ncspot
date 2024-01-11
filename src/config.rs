@@ -7,7 +7,6 @@ use dirs;
 
 use crate::command::{SortDirection, SortKey};
 use crate::model::playable::Playable;
-use crate::queue;
 use crate::serialization::{Serializer, CBOR, TOML};
 
 pub const CLIENT_ID: &str = "d420a117a32841c2b3474932e49fb54b";
@@ -33,7 +32,6 @@ pub struct ConfigValues {
     pub volnorm_pregain: Option<f64>,
     pub bitrate: Option<u32>,
     pub gapless: Option<bool>,
-    pub repeat: Option<queue::RepeatSetting>,
     pub playback_state: Option<PlaybackState>,
     pub statusbar_format: Option<String>,
 }
@@ -56,7 +54,6 @@ pub struct QueueState {
 /// Runtime state that should be persisted accross sessions.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserState {
-    pub repeat: queue::RepeatSetting,
     pub queuestate: QueueState,
     pub playlist_orders: HashMap<String, SortingOrder>,
     pub cache_version: u16,
@@ -66,7 +63,6 @@ pub struct UserState {
 impl Default for UserState {
     fn default() -> Self {
         Self {
-            repeat: queue::RepeatSetting::None,
             queuestate: QueueState::default(),
             playlist_orders: HashMap::new(),
             cache_version: 0,
@@ -97,10 +93,6 @@ impl Config {
             CBOR.load_or_generate_default(path, || Ok(UserState::default()), true)
                 .expect("could not load user state")
         };
-
-        if let Some(repeat) = values.repeat {
-            userstate.repeat = repeat;
-        }
 
         if let Some(playback_state) = values.playback_state.clone() {
             userstate.playback_state = playback_state;
