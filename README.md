@@ -30,8 +30,8 @@ Taking into account that ~3000 lines deleted are documentation or toolchain...
 
 ```
 $ git diff origin/main HEAD --stat | tail -n 1
-69 files changed, 523 insertions(+), 6340 deletions(-)
+72 files changed, 580 insertions(+), 6844 deletions(-)
 ```
 
-An approximate net -3000 lines of code.
+An approximate net -3300 lines of code.
 
