@@ -20,7 +20,7 @@ use crate::model::playlist::Playlist;
 use crate::model::show::Show;
 use crate::model::track::Track;
 use crate::queue::Queue;
-use crate::spotify::{Spotify, UriType};
+use crate::spotify::Spotify;
 use crate::traits::{ListItem, ViewExt};
 use crate::ui::layout::Layout;
 use crate::ui::listview::ListView;

@@ -1,5 +1,4 @@
 use crate::queue::RepeatSetting;
-use crate::spotify_url::SpotifyUrl;
 use std::fmt;
 
 use strum_macros::Display;
@@ -101,20 +100,6 @@ impl fmt::Display for SeekDirection {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub enum InsertSource {
-    Input(SpotifyUrl),
-}
-
-impl fmt::Display for InsertSource {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let repr = match self {
-            Self::Input(url) => url.to_string(),
-        };
-        write!(f, "{repr}")
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum Command {
     Quit,
     TogglePlay,
@@ -146,7 +131,6 @@ pub enum Command {
     Jump(JumpMode),
     Help,
     Noop,
-    Insert(InsertSource),
     NewPlaylist(String),
     Sort(SortKey, SortDirection),
     Logout,
@@ -189,7 +173,6 @@ impl fmt::Display for Command {
                 JumpMode::Previous | JumpMode::Next => vec![],
                 JumpMode::Query(term) => vec![term.to_owned()],
             },
-            Self::Insert(source) => vec![source.to_string()],
             Self::NewPlaylist(name) => vec![name.to_owned()],
             Self::Sort(key, direction) => vec![key.to_string(), direction.to_string()],
             Self::ShowRecommendations(mode) => vec![mode.to_string()],
@@ -256,7 +239,6 @@ impl Command {
             Self::Jump(JumpMode::Query(_)) => "jump",
             Self::Help => "help",
             Self::Noop => "noop",
-            Self::Insert(_) => "insert",
             Self::NewPlaylist(_) => "newplaylist",
             Self::Sort(_, _) => "sort",
             Self::Logout => "logout",
@@ -629,21 +611,6 @@ pub fn parse(input: &str) -> Result<Vec<Command>, CommandParseError> {
                 "jumpprevious" => Command::Jump(JumpMode::Previous),
                 "help" => Command::Help,
                 "noop" => Command::Noop,
-                "insert" => {
-                    let insert_source = match args.first().cloned() {
-                        None => Err(InsufficientArgs {
-                            cmd: command.into(),
-                            hint: Some("a Spotify URL".into()),
-                        }),
-                        Some(url) => SpotifyUrl::from_url(url).map(InsertSource::Input).ok_or(
-                            ArgParseError {
-                                arg: url.into(),
-                                err: "Invalid Spotify URL".into(),
-                            },
-                        ),
-                    }?;
-                    Command::Insert(insert_source)
-                }
                 "newplaylist" => {
                     if !args.is_empty() {
                         Ok(Command::NewPlaylist(args.join(" ")))

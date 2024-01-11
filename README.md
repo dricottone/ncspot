@@ -10,6 +10,7 @@ I have stripped all features that I believe are unnecessary, including:
  + configuration
  + saved state between sessions
  + clipboard interaction
+ + `insert` command (as it's more or less useless *without* a clipboard)
  + graphics (i.e. album art)
  + desktop notifications
  + MPRIS dbus
@@ -18,7 +19,7 @@ I have stripped all features that I believe are unnecessary, including:
 
 I have made these additional changes:
 
- + swapped the preferred backend to ncurses
+ + swapped the preferred backend to `ncurses`
  + merged a closed PR and un-reverted commit for POSIX signal handling,
    which is incompatible with the upstream project's preferred backend
  + swapped `platform_dirs` for `dirs`

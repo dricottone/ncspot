@@ -353,33 +353,3 @@ impl Spotify {
         self.send_worker(WorkerCommand::Shutdown);
     }
 }
-
-#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub enum UriType {
-    Album,
-    Artist,
-    Track,
-    Playlist,
-    Show,
-    Episode,
-}
-
-impl UriType {
-    pub fn from_uri(s: &str) -> Option<Self> {
-        if s.starts_with("spotify:album:") {
-            Some(Self::Album)
-        } else if s.starts_with("spotify:artist:") {
-            Some(Self::Artist)
-        } else if s.starts_with("spotify:track:") {
-            Some(Self::Track)
-        } else if s.starts_with("spotify:") && s.contains(":playlist:") {
-            Some(Self::Playlist)
-        } else if s.starts_with("spotify:show:") {
-            Some(Self::Show)
-        } else if s.starts_with("spotify:episode:") {
-            Some(Self::Episode)
-        } else {
-            None
-        }
-    }
-}

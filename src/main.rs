@@ -24,7 +24,6 @@ mod panic;
 mod queue;
 mod spotify;
 mod spotify_api;
-mod spotify_url;
 mod spotify_worker;
 mod traits;
 mod ui;

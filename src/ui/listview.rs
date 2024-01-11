@@ -11,19 +11,13 @@ use cursive::view::scroll;
 use cursive::{Cursive, Printer, Rect, Vec2};
 use unicode_width::UnicodeWidthStr;
 
-use crate::command::{Command, GotoMode, InsertSource, JumpMode, MoveAmount, MoveMode, TargetMode};
+use crate::command::{Command, GotoMode, JumpMode, MoveAmount, MoveMode, TargetMode};
 use crate::commands::CommandResult;
 use crate::ext_traits::CursiveExt;
 use crate::library::Library;
-use crate::model::album::Album;
-use crate::model::artist::Artist;
-use crate::model::episode::Episode;
 use crate::model::playable::Playable;
-use crate::model::playlist::Playlist;
-use crate::model::show::Show;
 use crate::model::track::Track;
 use crate::queue::Queue;
-use crate::spotify::UriType;
 use crate::traits::{IntoBoxedViewExt, ListItem, ViewExt};
 use crate::ui::album::AlbumView;
 use crate::ui::artist::ArtistView;
@@ -658,58 +652,6 @@ impl<I: ListItem + Clone> ViewExt for ListView<I> {
                         }
                     }
                 }
-            }
-            Command::Insert(source) => {
-                let url = match source {
-                    InsertSource::Input(url) => Some(url.clone()),
-                };
-
-                let spotify = self.queue.get_spotify();
-
-                if let Some(url) = url {
-                    let target: Option<Box<dyn ListItem>> = match url.uri_type {
-                        UriType::Track => spotify
-                            .api
-                            .track(&url.id)
-                            .map(|track| Track::from(&track).as_listitem()),
-                        UriType::Album => spotify
-                            .api
-                            .album(&url.id)
-                            .map(|album| Album::from(&album).as_listitem()),
-                        UriType::Playlist => spotify
-                            .api
-                            .playlist(&url.id)
-                            .map(|playlist| Playlist::from(&playlist).as_listitem()),
-                        UriType::Artist => spotify
-                            .api
-                            .artist(&url.id)
-                            .map(|artist| Artist::from(&artist).as_listitem()),
-                        UriType::Episode => spotify
-                            .api
-                            .episode(&url.id)
-                            .map(|episode| Episode::from(&episode).as_listitem()),
-                        UriType::Show => spotify
-                            .api
-                            .get_show(&url.id)
-                            .map(|show| Show::from(&show).as_listitem()),
-                    };
-
-                    let queue = self.queue.clone();
-                    let library = self.library.clone();
-                    // if item has a dedicated view, show it; otherwise open the context menu
-                    if let Some(target) = target {
-                        let view = target.open(queue.clone(), library.clone());
-                        return match view {
-                            Some(view) => Ok(CommandResult::View(view)),
-                            None => {
-                                let contextmenu = ContextMenu::new(target.as_ref(), queue, library);
-                                Ok(CommandResult::Modal(Box::new(contextmenu)))
-                            }
-                        };
-                    }
-                }
-
-                return Ok(CommandResult::Consumed(None));
             }
             Command::ShowRecommendations(mode) => {
                 let queue = self.queue.clone();

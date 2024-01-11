@@ -230,7 +230,6 @@ impl CommandManager {
             | Command::Move(_, _)
             | Command::Shift(_, _)
             | Command::Jump(_)
-            | Command::Insert(_)
             | Command::ShowRecommendations(_)
             | Command::Sort(_, _) => Err(format!(
                 "The command \"{}\" is unsupported in this view",
