@@ -1541,8 +1541,6 @@ dependencies = [
  "serde_json",
  "signal-hook",
  "signal-hook-tokio",
- "strum",
- "strum_macros",
  "tokio",
  "tokio-stream",
  "tokio-util",

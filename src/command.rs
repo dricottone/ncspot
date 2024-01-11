@@ -1,15 +1,13 @@
 use crate::queue::RepeatSetting;
 use std::fmt;
 
-use strum_macros::Display;
-
-#[derive(Display, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum TargetMode {
     Current,
     Selected,
 }
 
-#[derive(Display, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum MoveMode {
     Up,
     Down,
@@ -18,7 +16,7 @@ pub enum MoveMode {
     Playing,
 }
 
-#[derive(Display, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum MoveAmount {
     Integer(i32),
     Float(f32),
@@ -32,7 +30,7 @@ impl Default for MoveAmount {
 }
 
 /// Keys that can be used to sort songs on.
-#[derive(Display, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum SortKey {
     Title,
     Duration,
@@ -41,26 +39,26 @@ pub enum SortKey {
     Added,
 }
 
-#[derive(Display, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum SortDirection {
     Ascending,
     Descending,
 }
 
-#[derive(Display, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum JumpMode {
     Previous,
     Next,
     Query(String),
 }
 
-#[derive(Display, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum ShiftMode {
     Up,
     Down,
 }
 
-#[derive(Display, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum GotoMode {
     Album,
     Artist,
@@ -70,18 +68,6 @@ pub enum GotoMode {
 pub enum SeekDirection {
     Relative(i32),
     Absolute(u32),
-}
-
-impl fmt::Display for SeekDirection {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let repr = match self {
-            Self::Absolute(pos) => format!("{pos}"),
-            Self::Relative(delta) => {
-                format!("{}{}", if delta > &0 { "+" } else { "" }, delta)
-            }
-        };
-        write!(f, "{repr}")
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -123,70 +109,6 @@ pub enum Command {
     Redraw,
     Execute(String),
     Reconnect,
-}
-
-impl fmt::Display for Command {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut repr_tokens = vec![self.basename().to_owned()];
-        let mut extras_args = match self {
-            Self::Focus(tab) => vec![tab.to_owned()],
-            Self::Seek(direction) => vec![direction.to_string()],
-            Self::VolumeUp(amount) => vec![amount.to_string()],
-            Self::VolumeDown(amount) => vec![amount.to_string()],
-            Self::Repeat(mode) => match mode {
-                Some(mode) => vec![mode.to_string()],
-                None => vec![],
-            },
-            Self::Shuffle(on) => match on {
-                Some(b) => vec![(if *b { "on" } else { "off" }).into()],
-                None => vec![],
-            },
-            Self::Open(mode) => vec![mode.to_string()],
-            Self::Goto(mode) => vec![mode.to_string()],
-            Self::Move(mode, amount) => match (mode, amount) {
-                (MoveMode::Playing, _) => vec!["playing".to_string()],
-                (MoveMode::Up, MoveAmount::Extreme) => vec!["top".to_string()],
-                (MoveMode::Down, MoveAmount::Extreme) => vec!["bottom".to_string()],
-                (MoveMode::Left, MoveAmount::Extreme) => vec!["leftmost".to_string()],
-                (MoveMode::Right, MoveAmount::Extreme) => vec!["rightmost".to_string()],
-                (mode, MoveAmount::Float(amount)) => vec![mode.to_string(), amount.to_string()],
-                (mode, MoveAmount::Integer(amount)) => vec![mode.to_string(), amount.to_string()],
-            },
-            Self::Shift(mode, amount) => vec![mode.to_string(), amount.unwrap_or(1).to_string()],
-            Self::Search(term) => vec![term.to_owned()],
-            Self::Jump(mode) => match mode {
-                JumpMode::Previous | JumpMode::Next => vec![],
-                JumpMode::Query(term) => vec![term.to_owned()],
-            },
-            Self::NewPlaylist(name) => vec![name.to_owned()],
-            Self::Sort(key, direction) => vec![key.to_string(), direction.to_string()],
-            Self::ShowRecommendations(mode) => vec![mode.to_string()],
-            Self::Execute(cmd) => vec![cmd.to_owned()],
-            Self::Quit
-            | Self::TogglePlay
-            | Self::Stop
-            | Self::Previous
-            | Self::Next
-            | Self::Clear
-            | Self::Queue
-            | Self::PlayNext
-            | Self::Play
-            | Self::UpdateLibrary
-            | Self::Save
-            | Self::SaveCurrent
-            | Self::SaveQueue
-            | Self::Add
-            | Self::AddCurrent
-            | Self::Back
-            | Self::Help
-            | Self::Noop
-            | Self::Logout
-            | Self::Reconnect
-            | Self::Redraw => vec![],
-        };
-        repr_tokens.append(&mut extras_args);
-        write!(f, "{}", repr_tokens.join(" "))
-    }
 }
 
 impl Command {

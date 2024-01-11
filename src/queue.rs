@@ -5,14 +5,13 @@ use std::sync::{Arc, RwLock};
 use log::{debug, info};
 
 use rand::prelude::*;
-use strum_macros::Display;
 
 use crate::model::playable::Playable;
 use crate::spotify::PlayerEvent;
 use crate::spotify::Spotify;
 
 /// Repeat behavior for the [Queue].
-#[derive(Display, Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum RepeatSetting {
     None,
     RepeatPlaylist,
