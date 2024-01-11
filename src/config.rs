@@ -57,7 +57,6 @@ pub struct QueueState {
 /// Runtime state that should be persisted accross sessions.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserState {
-    pub volume: u16,
     pub shuffle: bool,
     pub repeat: queue::RepeatSetting,
     pub queuestate: QueueState,
@@ -69,7 +68,6 @@ pub struct UserState {
 impl Default for UserState {
     fn default() -> Self {
         Self {
-            volume: u16::MAX,
             shuffle: false,
             repeat: queue::RepeatSetting::None,
             queuestate: QueueState::default(),

@@ -1,3 +1,5 @@
+use std::sync::atomic::{AtomicU16,Ordering};
+
 use librespot_core::authentication::Credentials;
 use librespot_core::cache::Cache;
 use librespot_core::config::SessionConfig;
@@ -53,6 +55,7 @@ pub struct Spotify {
     since: Arc<RwLock<Option<SystemTime>>>,
     channel: Arc<RwLock<Option<mpsc::UnboundedSender<WorkerCommand>>>>,
     user: Option<String>,
+    volume: Arc<AtomicU16>,
 }
 
 impl Spotify {
@@ -67,13 +70,12 @@ impl Spotify {
             since: Arc::new(RwLock::new(None)),
             channel: Arc::new(RwLock::new(None)),
             user: None,
+            volume: Arc::new(AtomicU16::new(u16::MAX)),
         };
 
         let (user_tx, user_rx) = oneshot::channel();
         spotify.start_worker(Some(user_tx));
         spotify.user = ASYNC_RUNTIME.get().unwrap().block_on(user_rx).ok();
-        let volume = cfg.state().volume;
-        spotify.set_volume(volume);
 
         spotify.api.set_worker_channel(spotify.channel.clone());
         spotify.api.update_token();
@@ -139,7 +141,7 @@ impl Spotify {
         };
         let cache = Cache::new(
             Some(librespot_cache_path.clone()),
-            Some(librespot_cache_path.join("volume")),
+            None,
             audio_cache_path,
             cfg.values()
                 .audio_cache_size
@@ -371,13 +373,13 @@ impl Spotify {
     }
 
     pub fn volume(&self) -> u16 {
-        self.cfg.state().volume
+        self.volume.load(Ordering::Relaxed)
     }
 
-    pub fn set_volume(&self, volume: u16) {
-        info!("setting volume to {}", volume);
-        self.cfg.with_state_mut(|mut s| s.volume = volume);
-        self.send_worker(WorkerCommand::SetVolume(volume));
+    pub fn set_volume(&self, new_volume: u16) {
+        info!("setting volume to {}", new_volume);
+        self.volume.store(new_volume, Ordering::Relaxed);
+        self.send_worker(WorkerCommand::SetVolume(new_volume));
     }
 
     pub fn preload(&self, track: &Playable) {
