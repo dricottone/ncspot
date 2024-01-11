@@ -159,7 +159,7 @@ impl Application {
         let event_manager = EventManager::new(cursive.cb_sink().clone());
 
         let spotify =
-            spotify::Spotify::new(event_manager.clone(), credentials, configuration.clone());
+            spotify::Spotify::new(event_manager.clone(), credentials);
 
         let library = Arc::new(Library::new(
             event_manager.clone(),

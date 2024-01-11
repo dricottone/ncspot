@@ -12,14 +12,6 @@ pub const CLIENT_ID: &str = "d420a117a32841c2b3474932e49fb54b";
 #[derive(Clone, Serialize, Deserialize, Debug, Default)]
 pub struct ConfigValues {
     pub flip_status_indicators: Option<bool>,
-    pub audio_cache: Option<bool>,
-    pub audio_cache_size: Option<u32>,
-    pub backend: Option<String>,
-    pub backend_device: Option<String>,
-    pub volnorm: Option<bool>,
-    pub volnorm_pregain: Option<f64>,
-    pub bitrate: Option<u32>,
-    pub gapless: Option<bool>,
     pub statusbar_format: Option<String>,
 }
 

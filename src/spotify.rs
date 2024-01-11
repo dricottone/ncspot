@@ -21,7 +21,6 @@ use tokio::sync::mpsc;
 use url::Url;
 
 use std::env;
-use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, SystemTime};
 
@@ -48,7 +47,6 @@ pub enum PlayerEvent {
 pub struct Spotify {
     events: EventManager,
     credentials: Credentials,
-    cfg: Arc<config::Config>,
     status: Arc<RwLock<PlayerEvent>>,
     pub api: WebApi,
     elapsed: Arc<RwLock<Option<Duration>>>,
@@ -59,11 +57,10 @@ pub struct Spotify {
 }
 
 impl Spotify {
-    pub fn new(events: EventManager, credentials: Credentials, cfg: Arc<config::Config>) -> Self {
+    pub fn new(events: EventManager, credentials: Credentials) -> Self {
         let mut spotify = Self {
             events,
             credentials,
-            cfg: cfg.clone(),
             status: Arc::new(RwLock::new(PlayerEvent::Stopped)),
             api: WebApi::new(),
             elapsed: Arc::new(RwLock::new(None)),
@@ -93,7 +90,6 @@ impl Spotify {
             .expect("can't writelock worker channel") = Some(tx);
         {
             let worker_channel = self.channel.clone();
-            let cfg = self.cfg.clone();
             let events = self.events.clone();
             let volume = self.volume();
             let credentials = self.credentials.clone();
@@ -101,7 +97,6 @@ impl Spotify {
                 worker_channel,
                 events,
                 rx,
-                cfg,
                 credentials,
                 user_tx,
                 volume,
@@ -130,24 +125,12 @@ impl Spotify {
             .map(|r| r.0)
     }
 
-    async fn create_session(
-        cfg: &config::Config,
-        credentials: Credentials,
-    ) -> Result<Session, SessionError> {
+    async fn create_session(credentials: Credentials) -> Result<Session, SessionError> {
         let librespot_cache_path = config::cache_path("librespot");
-        let audio_cache_path = match cfg.values().audio_cache.unwrap_or(true) {
-            true => Some(librespot_cache_path.join("files")),
-            false => None,
-        };
-        let cache = Cache::new(
-            Some(librespot_cache_path.clone()),
-            None,
-            audio_cache_path,
-            cfg.values()
-                .audio_cache_size
-                .map(|size| (size as u64 * 1048576)),
-        )
-        .expect("Could not create cache");
+        let audio_cache_path = librespot_cache_path.join("files");
+        let cache = Cache::new(Some(librespot_cache_path), None, Some(audio_cache_path), None)
+            .expect("Could not create cache");
+
         debug!("opening spotify session");
         let session_config = Self::session_config();
         Session::connect(session_config, credentials, Some(cache), true)
@@ -155,18 +138,11 @@ impl Spotify {
             .map(|r| r.0)
     }
 
-    fn init_backend(desired_backend: Option<String>) -> Option<SinkBuilder> {
-        let backend = if let Some(name) = desired_backend {
-            audio_backend::BACKENDS
-                .iter()
-                .find(|backend| name == backend.0)
-        } else {
-            audio_backend::BACKENDS.first()
-        }?;
-
+    fn init_backend() -> Option<SinkBuilder> {
+        let backend = audio_backend::BACKENDS.first()?;
         let backend_name = backend.0;
-
         info!("Initializing audio backend {}", backend_name);
+
         if backend_name == "pulseaudio" {
             env::set_var("PULSE_PROP_application.name", "ncspot");
             env::set_var("PULSE_PROP_stream.description", "ncurses Spotify client");
@@ -180,26 +156,16 @@ impl Spotify {
         worker_channel: Arc<RwLock<Option<mpsc::UnboundedSender<WorkerCommand>>>>,
         events: EventManager,
         commands: mpsc::UnboundedReceiver<WorkerCommand>,
-        cfg: Arc<config::Config>,
         credentials: Credentials,
         user_tx: Option<oneshot::Sender<String>>,
         volume: u16,
     ) {
-        let bitrate_str = cfg.values().bitrate.unwrap_or(320).to_string();
-        let bitrate = Bitrate::from_str(&bitrate_str);
-        if bitrate.is_err() {
-            error!("invalid bitrate, will use 320 instead")
-        }
-
         let player_config = PlayerConfig {
-            gapless: cfg.values().gapless.unwrap_or(true),
-            bitrate: bitrate.unwrap_or(Bitrate::Bitrate320),
-            normalisation: cfg.values().volnorm.unwrap_or(false),
-            normalisation_pregain_db: cfg.values().volnorm_pregain.unwrap_or(0.0),
+            bitrate: Bitrate::Bitrate320,
             ..Default::default()
         };
 
-        let session = Self::create_session(&cfg, credentials)
+        let session = Self::create_session(credentials)
             .await
             .expect("Could not create session");
         user_tx.map(|tx| tx.send(session.username()));
@@ -209,15 +175,12 @@ impl Spotify {
         let mixer = create_mixer(MixerConfig::default());
         mixer.set_volume(volume);
 
-        let backend_name = cfg.values().backend.clone();
-        let backend =
-            Self::init_backend(backend_name).expect("Could not find an audio playback backend");
-        let audio_format: librespot_playback::config::AudioFormat = Default::default();
+        let backend = Self::init_backend().expect("Could not find an audio playback backend");
         let (player, player_events) = Player::new(
             player_config,
             session.clone(),
             mixer.get_soft_volume(),
-            move || (backend)(cfg.values().backend_device.clone(), audio_format),
+            move || (backend)(None, librespot_playback::config::AudioFormat::default()),
         );
 
         let mut worker = Worker::new(
