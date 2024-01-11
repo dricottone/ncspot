@@ -1,11 +1,9 @@
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::fs;
 
 use dirs;
 
-use crate::command::{SortDirection, SortKey};
 use crate::serialization::{Serializer, CBOR, TOML};
 
 pub const CLIENT_ID: &str = "d420a117a32841c2b3474932e49fb54b";
@@ -25,23 +23,15 @@ pub struct ConfigValues {
     pub statusbar_format: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SortingOrder {
-    pub key: SortKey,
-    pub direction: SortDirection,
-}
-
 /// Runtime state that should be persisted accross sessions.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserState {
-    pub playlist_orders: HashMap<String, SortingOrder>,
     pub cache_version: u16,
 }
 
 impl Default for UserState {
     fn default() -> Self {
         Self {
-            playlist_orders: HashMap::new(),
             cache_version: 0,
         }
     }
@@ -78,10 +68,6 @@ impl Config {
 
     pub fn values(&self) -> RwLockReadGuard<ConfigValues> {
         self.values.read().expect("can't readlock config values")
-    }
-
-    pub fn state(&self) -> RwLockReadGuard<UserState> {
-        self.state.read().expect("can't readlock user state")
     }
 
     pub fn with_state_mut<F>(&self, cb: F)
