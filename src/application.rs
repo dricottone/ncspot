@@ -41,6 +41,8 @@ pub fn setup_logging(filename: &Path) -> Result<(), fern::InitError> {
         .level(log::LevelFilter::Trace)
         // Set runtime log level for modules
         .level_for("librespot", log::LevelFilter::Debug)
+        .level_for("rustls", log::LevelFilter::Warn)
+        .level_for("ureq", log::LevelFilter::Warn)
         .level_for("cursive_buffered_backend", log::LevelFilter::Debug)
         // Output to stdout, files, and other Dispatch configurations
         .chain(fern::log_file(filename)?)
