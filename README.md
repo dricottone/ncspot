@@ -19,6 +19,10 @@ I have stripped all features that I believe are unnecessary, including:
 
 I have made these additional changes:
 
+ + application is practically a read-only client
+   + no (un)following artists and podcasts
+   + no creating or editing playlists
+   + no unsaving songs/albums, but currently allow saving them
  + swapped the preferred backend to `ncurses`
  + merged a closed PR and un-reverted commit for POSIX signal handling,
    which is incompatible with the upstream project's preferred backend
@@ -30,6 +34,6 @@ Taking into account that ~3000 lines deleted are documentation or toolchain...
 
 ```
 $ git diff origin/main HEAD --stat | tail -n 1
-72 files changed, 595 insertions(+), 7015 deletions(-)
+ 74 files changed, 648 insertions(+), 7578 deletions(-)
 ```
 
