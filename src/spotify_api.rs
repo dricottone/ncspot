@@ -15,7 +15,7 @@ use rspotify::model::{
     AlbumId, AlbumType, ArtistId, CursorBasedPage, EpisodeId, FullAlbum, FullArtist, FullEpisode,
     FullPlaylist, FullShow, FullTrack, Market, Page, PlayableId, PlaylistId,
     PrivateUser, Recommendations, SavedAlbum, SavedTrack, SearchResult, SearchType, Show, ShowId,
-    SimplifiedTrack, TrackId, UserId,
+    SimplifiedTrack, TrackId,
 };
 use rspotify::{prelude::*, AuthCodeSpotify, ClientError, ClientResult, Config, Token};
 use std::collections::HashSet;
@@ -174,67 +174,6 @@ impl WebApi {
             )
         })
         .is_some()
-    }
-
-    pub fn overwrite_playlist(&self, id: &str, tracks: &[Playable]) {
-        // create mutable copy for chunking
-        let mut tracks: Vec<Playable> = tracks.to_vec();
-
-        // we can only send 100 tracks per request
-        let mut remainder = if tracks.len() > 100 {
-            Some(tracks.split_off(100))
-        } else {
-            None
-        };
-
-        if let Some(()) = self.api_with_retry(|api| {
-            let playable_ids: Vec<PlayableId> = tracks
-                .iter()
-                .filter_map(|playable| playable.into())
-                .collect();
-            api.playlist_replace_items(
-                PlaylistId::from_id(id).unwrap(),
-                playable_ids.iter().map(|p| p.as_ref()),
-            )
-        }) {
-            debug!("saved {} tracks to playlist {}", tracks.len(), id);
-            while let Some(ref mut tracks) = remainder.clone() {
-                // grab the next set of 100 tracks
-                remainder = if tracks.len() > 100 {
-                    Some(tracks.split_off(100))
-                } else {
-                    None
-                };
-
-                debug!("adding another {} tracks to playlist", tracks.len());
-                if self.append_tracks(id, tracks, None) {
-                    debug!("{} tracks successfully added", tracks.len());
-                } else {
-                    error!("error saving tracks to playlists {}", id);
-                    return;
-                }
-            }
-        } else {
-            error!("error saving tracks to playlist {}", id);
-        }
-    }
-
-    pub fn create_playlist(
-        &self,
-        name: &str,
-        public: Option<bool>,
-        description: Option<&str>,
-    ) -> Option<String> {
-        let result = self.api_with_retry(|api| {
-            api.user_playlist_create(
-                UserId::from_id(self.user.as_ref().unwrap()).unwrap(),
-                name,
-                public,
-                None,
-                description,
-            )
-        });
-        result.map(|r| r.id.id().to_string())
     }
 
     pub fn album(&self, album_id: &str) -> Option<FullAlbum> {

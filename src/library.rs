@@ -118,22 +118,6 @@ impl Library {
         store.len() - 1
     }
 
-    pub fn overwrite_playlist(&self, id: &str, tracks: &[Playable]) {
-        debug!("saving {} tracks to list {}", tracks.len(), id);
-        self.spotify.api.overwrite_playlist(id, tracks);
-
-        self.fetch_playlists();
-        self.save_cache(cache_path(CACHE_PLAYLISTS), self.playlists.clone());
-    }
-
-    pub fn save_playlist(&self, name: &str, tracks: &[Playable]) {
-        debug!("saving {} tracks to new list {}", tracks.len(), name);
-        match self.spotify.api.create_playlist(name, None, None) {
-            Some(id) => self.overwrite_playlist(&id, tracks),
-            None => error!("could not create new playlist.."),
-        }
-    }
-
     pub fn update_library(&self) {
         *self.is_done.write().unwrap() = false;
 

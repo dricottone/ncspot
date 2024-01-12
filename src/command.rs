@@ -84,7 +84,6 @@ pub enum Command {
     UpdateLibrary,
     Save,
     SaveCurrent,
-    SaveQueue,
     Add,
     AddCurrent,
     Focus(String),
@@ -102,7 +101,6 @@ pub enum Command {
     Jump(JumpMode),
     Help,
     Noop,
-    NewPlaylist(String),
     Sort(SortKey, SortDirection),
     Logout,
     ShowRecommendations(TargetMode),
@@ -126,7 +124,6 @@ impl Command {
             Self::UpdateLibrary => "update",
             Self::Save => "save",
             Self::SaveCurrent => "save current",
-            Self::SaveQueue => "save queue",
             Self::Add => "add",
             Self::AddCurrent => "add current",
             Self::Focus(_) => "focus",
@@ -146,7 +143,6 @@ impl Command {
             Self::Jump(JumpMode::Query(_)) => "jump",
             Self::Help => "help",
             Self::Noop => "noop",
-            Self::NewPlaylist(_) => "newplaylist",
             Self::Sort(_, _) => "sort",
             Self::Logout => "logout",
             Self::ShowRecommendations(_) => "similar",
@@ -261,7 +257,6 @@ pub fn parse(input: &str) -> Result<Vec<Command>, CommandParseError> {
                     None => Ok(Command::Add),
                 }?,
                 "save" => match args.first().cloned() {
-                    Some("queue") => Ok(Command::SaveQueue),
                     Some("current") => Ok(Command::SaveCurrent),
                     Some(arg) => Err(BadEnumArg {
                         arg: arg.into(),
@@ -518,16 +513,6 @@ pub fn parse(input: &str) -> Result<Vec<Command>, CommandParseError> {
                 "jumpprevious" => Command::Jump(JumpMode::Previous),
                 "help" => Command::Help,
                 "noop" => Command::Noop,
-                "newplaylist" => {
-                    if !args.is_empty() {
-                        Ok(Command::NewPlaylist(args.join(" ")))
-                    } else {
-                        Err(InsufficientArgs {
-                            cmd: command.into(),
-                            hint: Some("a name".into()),
-                        })
-                    }?
-                }
                 "sort" => {
                     let &key_raw = args.first().ok_or(InsufficientArgs {
                         cmd: command.into(),

@@ -24,7 +24,7 @@ use cursive::event::{Event, Key};
 use cursive::traits::View;
 use cursive::views::Dialog;
 use cursive::Cursive;
-use log::{debug, error, info};
+use log::{debug, info};
 
 pub enum CommandResult {
     Consumed(Option<String>),
@@ -150,13 +150,6 @@ impl CommandManager {
                 s.call_on_name("main", move |v: &mut Layout| v.push_view(view));
                 Ok(None)
             }
-            Command::NewPlaylist(name) => {
-                match self.spotify.api.create_playlist(name, None, None) {
-                    Some(_) => self.library.update_library(),
-                    None => error!("could not create playlist {}", name),
-                }
-                Ok(None)
-            }
             Command::Search(term) => {
                 let view = if !term.is_empty() {
                     Some(SearchResultsView::new(
@@ -221,7 +214,6 @@ impl CommandManager {
             | Command::PlayNext
             | Command::Play
             | Command::Save
-            | Command::SaveQueue
             | Command::Add
             | Command::Focus(_)
             | Command::Back
@@ -300,7 +292,6 @@ impl CommandManager {
         cursive.add_global_callback(Event::Char('n'), move |siv| send_command(siv, Command::Jump(JumpMode::Next)));
         cursive.add_global_callback(Event::Char('N'), move |siv| send_command(siv, Command::Jump(JumpMode::Previous)));
         cursive.add_global_callback(Event::Char('s'), move |siv| send_command(siv, Command::Save));
-        cursive.add_global_callback(Event::CtrlChar('s'), move |siv| send_command(siv, Command::SaveQueue));
         cursive.add_global_callback(Event::Char('f'), move |siv| send_command(siv, Command::Seek(SeekDirection::Relative(1000))));
         cursive.add_global_callback(Event::Char('b'), move |siv| send_command(siv, Command::Seek(SeekDirection::Relative(-1000))));
         cursive.add_global_callback(Event::Char('F'), move |siv| send_command(siv, Command::Seek(SeekDirection::Relative(10000))));
