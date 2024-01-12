@@ -88,6 +88,8 @@ impl Spotify {
             .channel
             .write()
             .expect("can't writelock worker channel") = Some(tx);
+        debug!("Spawning worker");
+
         {
             let worker_channel = self.channel.clone();
             let events = self.events.clone();
