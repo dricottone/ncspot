@@ -12,7 +12,7 @@ use crate::library::Library;
 use crate::queue::{Queue, RepeatSetting};
 use crate::spotify::{Spotify, VOLUME_PERCENT};
 use crate::traits::{IntoBoxedViewExt, ListItem, ViewExt};
-use crate::ui::contextmenu::{AddToPlaylistMenu, ContextMenu};
+use crate::ui::contextmenu::ContextMenu;
 use crate::ui::help::HelpView;
 use crate::ui::layout::Layout;
 use crate::ui::modal::Modal;
@@ -188,19 +188,6 @@ impl CommandManager {
                 self.spotify.shutdown();
                 Ok(None)
             }
-            Command::AddCurrent => {
-                if let Some(track) = self.queue.get_current() {
-                    if let Some(track) = track.track() {
-                        let dialog = ContextMenu::add_track_dialog(
-                            self.library.clone(),
-                            self.queue.get_spotify(),
-                            track,
-                        );
-                        s.add_layer(dialog);
-                    }
-                }
-                Ok(None)
-            }
             Command::Save => {
                 if let Some(mut track) = self.queue.get_current() {
                     track.save(&self.library);
@@ -211,7 +198,6 @@ impl CommandManager {
             Command::Queue
             | Command::PlayNext
             | Command::Play
-            | Command::Add
             | Command::Focus(_)
             | Command::Back
             | Command::Open(_)
@@ -230,8 +216,6 @@ impl CommandManager {
     fn handle_callbacks(&self, s: &mut Cursive, cmd: &Command) -> Result<Option<String>, String> {
         let local = if let Some(mut contextmenu) = s.find_name::<ContextMenu>("contextmenu") {
             contextmenu.on_command(s, cmd)?
-        } else if let Some(mut add_track_menu) = s.find_name::<AddToPlaylistMenu>("addtrackmenu") {
-            add_track_menu.on_command(s, cmd)?
         } else {
             s.on_layout(|siv, mut l| l.on_command(siv, cmd))?
         };

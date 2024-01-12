@@ -143,9 +143,7 @@ impl ListItem for Artist {
         }
     }
 
-    fn save(&mut self, library: &Library) {
-        library.follow_artist(self);
-    }
+    fn save(&mut self, _library: &Library) {}
 
     fn open(&self, queue: Arc<Queue>, library: Arc<Library>) -> Option<Box<dyn ViewExt>> {
         Some(ArtistView::new(queue, library, self).into_boxed_view_ext())

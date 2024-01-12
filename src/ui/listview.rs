@@ -501,25 +501,6 @@ impl<I: ListItem + Clone> ViewExt for ListView<I> {
 
                 return Ok(CommandResult::Consumed(None));
             }
-            Command::Add => {
-                let item = {
-                    let content = self.content.read().unwrap();
-                    content.get(self.selected).cloned()
-                };
-
-                if let Some(track) = item {
-                    if let Some(track) = track.track() {
-                        let dialog = ContextMenu::add_track_dialog(
-                            self.library.clone(),
-                            self.queue.get_spotify(),
-                            track,
-                        );
-                        return Ok(CommandResult::Modal(Box::new(dialog)));
-                    }
-                }
-
-                return Ok(CommandResult::Consumed(None));
-            }
             Command::Jump(mode) => match mode {
                 JumpMode::Query(query) => {
                     self.search_query = query.to_lowercase();

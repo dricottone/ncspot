@@ -581,66 +581,6 @@ impl Library {
         artists.iter().any(|a| a.id == artist.id && a.is_followed)
     }
 
-    pub fn follow_artist(&self, artist: &Artist) {
-        if !*self.is_done.read().unwrap() {
-            return;
-        }
-
-        if let Some(ref artist_id) = artist.id {
-            if self
-                .spotify
-                .api
-                .user_follow_artists(vec![artist_id.as_str()])
-                .is_none()
-            {
-                return;
-            }
-        }
-
-        {
-            let mut store = self.artists.write().unwrap();
-            if let Some(i) = store.iter().position(|a| a.id == artist.id) {
-                store[i].is_followed = true;
-            } else {
-                let mut artist = artist.clone();
-                artist.is_followed = true;
-                store.push(artist);
-            }
-        }
-
-        self.populate_artists();
-
-        self.save_cache(cache_path(CACHE_ARTISTS), self.artists.clone());
-    }
-
-    pub fn unfollow_artist(&self, artist: &Artist) {
-        if !*self.is_done.read().unwrap() {
-            return;
-        }
-
-        if let Some(ref artist_id) = artist.id {
-            if self
-                .spotify
-                .api
-                .user_unfollow_artists(vec![artist_id.as_str()])
-                .is_none()
-            {
-                return;
-            }
-        }
-
-        {
-            let mut store = self.artists.write().unwrap();
-            if let Some(i) = store.iter().position(|a| a.id == artist.id) {
-                store[i].is_followed = false;
-            }
-        }
-
-        self.populate_artists();
-
-        self.save_cache(cache_path(CACHE_ARTISTS), self.artists.clone());
-    }
-
     pub fn is_saved_playlist(&self, playlist: &Playlist) -> bool {
         if !*self.is_done.read().unwrap() {
             return false;
@@ -655,33 +595,6 @@ impl Library {
             .as_ref()
             .map(|id| id != &playlist.owner_id)
             .unwrap_or(false)
-    }
-
-    pub fn follow_playlist(&self, playlist: &Playlist) {
-        if !*self.is_done.read().unwrap() {
-            return;
-        }
-
-        if self
-            .spotify
-            .api
-            .user_playlist_follow_playlist(playlist.id.as_str())
-            .is_none()
-        {
-            return;
-        }
-
-        let mut playlist = playlist.clone();
-        playlist.load_tracks(self.spotify.clone());
-
-        {
-            let mut store = self.playlists.write().unwrap();
-            if !store.iter().any(|p| p.id == playlist.id) {
-                store.insert(0, playlist);
-            }
-        }
-
-        self.save_cache(cache_path(CACHE_PLAYLISTS), self.playlists.clone());
     }
 
     pub fn is_saved_show(&self, show: &Show) -> bool {

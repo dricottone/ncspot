@@ -54,21 +54,6 @@ impl Playlist {
         })
     }
 
-    pub fn append_tracks(&mut self, new_tracks: &[Playable], spotify: &Spotify, library: &Library) {
-        let mut has_modified = false;
-
-        if spotify.api.append_tracks(&self.id, new_tracks, None) {
-            if let Some(tracks) = &mut self.tracks {
-                tracks.append(&mut new_tracks.to_vec());
-                has_modified = true;
-            }
-        }
-
-        if has_modified {
-            library.playlist_update(self);
-        }
-    }
-
     pub fn sort(&mut self, key: &SortKey, direction: &SortDirection) {
         fn compare_artists(a: &[String], b: &[String]) -> Ordering {
             let sanitize_artists_name = |x: &[String]| -> Vec<String> {
@@ -215,9 +200,7 @@ impl ListItem for Playlist {
         }
     }
 
-    fn save(&mut self, library: &Library) {
-        library.follow_playlist(self);
-    }
+    fn save(&mut self, _library: &Library) {}
 
     fn open(&self, queue: Arc<Queue>, library: Arc<Library>) -> Option<Box<dyn ViewExt>> {
         Some(PlaylistView::new(queue, library, self).into_boxed_view_ext())
