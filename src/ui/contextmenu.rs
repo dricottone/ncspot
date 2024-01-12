@@ -24,7 +24,6 @@ pub struct ContextMenu {
 enum ContextMenuAction {
     ShowItem(Box<dyn ListItem>),
     ShowRecommendations(Box<Track>),
-    Save(Box<dyn ListItem>),
     Play(Box<dyn ListItem>),
     PlayNext(Box<dyn ListItem>),
     TogglePlayback,
@@ -79,22 +78,6 @@ impl ContextMenu {
                 ContextMenuAction::ShowRecommendations(Box::new(t)),
             )
         }
-        // If the item is saveable, its save state will be set
-        if let Some(false) = item.is_saved(&library) {
-            content.add_item("Save", ContextMenuAction::Save(item.as_listitem()));
-        }
-
-        if let Some(ref a) = album {
-            if let Some(savestatus) = a.is_saved(&library) {
-                content.add_item(
-                    match savestatus {
-                        true => "Unsave album",
-                        false => "Save album",
-                    },
-                    ContextMenuAction::Save(a.as_listitem()),
-                );
-            }
-        }
 
         // open detail view of artist/album
         {
@@ -115,7 +98,6 @@ impl ContextMenu {
                             s.call_on_name("main", move |v: &mut Layout| v.push_view(view));
                         }
                     }
-                    ContextMenuAction::Save(item) => item.as_listitem().save(&library),
                     ContextMenuAction::Play(item) => item.as_listitem().play(&queue),
                     ContextMenuAction::PlayNext(item) => item.as_listitem().play_next(&queue),
                     ContextMenuAction::TogglePlayback => queue.toggleplayback(),

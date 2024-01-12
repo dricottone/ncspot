@@ -22,7 +22,7 @@ I have made these additional changes:
  + application is practically a read-only client
    + no (un)following artists and podcasts
    + no creating or editing playlists
-   + no unsaving songs/albums, but currently allow saving them
+   + no (un)saving songs and albums
  + swapped the preferred backend to `ncurses`
  + merged a closed PR and un-reverted commit for POSIX signal handling,
    which is incompatible with the upstream project's preferred backend

@@ -11,7 +11,7 @@ use crate::fs::cache_path;
 use crate::library::Library;
 use crate::queue::{Queue, RepeatSetting};
 use crate::spotify::{Spotify, VOLUME_PERCENT};
-use crate::traits::{IntoBoxedViewExt, ListItem, ViewExt};
+use crate::traits::{IntoBoxedViewExt, ViewExt};
 use crate::ui::contextmenu::ContextMenu;
 use crate::ui::help::HelpView;
 use crate::ui::layout::Layout;
@@ -188,12 +188,6 @@ impl CommandManager {
                 self.spotify.shutdown();
                 Ok(None)
             }
-            Command::Save => {
-                if let Some(mut track) = self.queue.get_current() {
-                    track.save(&self.library);
-                }
-                Ok(None)
-            }
 
             Command::Queue
             | Command::PlayNext
@@ -266,7 +260,6 @@ impl CommandManager {
         cursive.add_global_callback(Event::Key(Key::Enter), move |siv| send_command(siv, Command::Play));
         cursive.add_global_callback(Event::Char('n'), move |siv| send_command(siv, Command::Jump(JumpMode::Next)));
         cursive.add_global_callback(Event::Char('N'), move |siv| send_command(siv, Command::Jump(JumpMode::Previous)));
-        cursive.add_global_callback(Event::Char('s'), move |siv| send_command(siv, Command::Save));
         cursive.add_global_callback(Event::Char('f'), move |siv| send_command(siv, Command::Seek(SeekDirection::Relative(1000))));
         cursive.add_global_callback(Event::Char('b'), move |siv| send_command(siv, Command::Seek(SeekDirection::Relative(-1000))));
         cursive.add_global_callback(Event::Char('F'), move |siv| send_command(siv, Command::Seek(SeekDirection::Relative(10000))));

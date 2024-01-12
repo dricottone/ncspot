@@ -489,18 +489,6 @@ impl<I: ListItem + Clone> ViewExt for ListView<I> {
 
                 return Ok(CommandResult::Consumed(None));
             }
-            Command::Save => {
-                let mut item = {
-                    let content = self.content.read().unwrap();
-                    content.get(self.selected).cloned()
-                };
-
-                if let Some(item) = item.as_mut() {
-                    item.save(&self.library);
-                }
-
-                return Ok(CommandResult::Consumed(None));
-            }
             Command::Jump(mode) => match mode {
                 JumpMode::Query(query) => {
                     self.search_query = query.to_lowercase();

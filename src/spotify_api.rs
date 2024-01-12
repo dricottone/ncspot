@@ -13,7 +13,7 @@ use log::{debug, error, info};
 use rspotify::http::HttpError;
 use rspotify::model::{
     AlbumId, AlbumType, ArtistId, CursorBasedPage, EpisodeId, FullAlbum, FullArtist, FullEpisode,
-    FullPlaylist, FullShow, FullTrack, Market, Page, PlayableId, PlaylistId,
+    FullPlaylist, FullShow, FullTrack, Market, Page, PlaylistId,
     PrivateUser, Recommendations, SavedAlbum, SavedTrack, SearchResult, SearchType, Show, ShowId,
     SimplifiedTrack, TrackId,
 };
@@ -154,26 +154,6 @@ impl WebApi {
                 None
             }
         }
-    }
-
-    pub fn append_tracks(
-        &self,
-        playlist_id: &str,
-        tracks: &[Playable],
-        position: Option<u32>,
-    ) -> bool {
-        self.api_with_retry(|api| {
-            let trackids: Vec<PlayableId> = tracks
-                .iter()
-                .filter_map(|playable| playable.into())
-                .collect();
-            api.playlist_add_items(
-                PlaylistId::from_id(playlist_id).unwrap(),
-                trackids.iter().map(|id| id.as_ref()),
-                position,
-            )
-        })
-        .is_some()
     }
 
     pub fn album(&self, album_id: &str) -> Option<FullAlbum> {
@@ -401,42 +381,11 @@ impl WebApi {
         self.api_with_retry(|api| api.get_saved_show_manual(Some(50), Some(offset)))
     }
 
-    pub fn save_shows(&self, ids: Vec<&str>) -> bool {
-        self.api_with_retry(|api| {
-            api.save_shows(
-                ids.iter()
-                    .map(|id| ShowId::from_id(*id).unwrap())
-                    .collect::<Vec<ShowId>>(),
-            )
-        })
-        .is_some()
-    }
-
     pub fn current_user_followed_artists(
         &self,
         last: Option<&str>,
     ) -> Option<CursorBasedPage<FullArtist>> {
         self.api_with_retry(|api| api.current_user_followed_artists(last, Some(50)))
-    }
-
-    pub fn user_follow_artists(&self, ids: Vec<&str>) -> Option<()> {
-        self.api_with_retry(|api| {
-            api.user_follow_artists(
-                ids.iter()
-                    .map(|id| ArtistId::from_id(*id).unwrap())
-                    .collect::<Vec<ArtistId>>(),
-            )
-        })
-    }
-
-    pub fn user_unfollow_artists(&self, ids: Vec<&str>) -> Option<()> {
-        self.api_with_retry(|api| {
-            api.user_unfollow_artists(
-                ids.iter()
-                    .map(|id| ArtistId::from_id(*id).unwrap())
-                    .collect::<Vec<ArtistId>>(),
-            )
-        })
     }
 
     pub fn current_user_saved_albums(&self, offset: u32) -> Option<Page<SavedAlbum>> {
@@ -445,34 +394,10 @@ impl WebApi {
         })
     }
 
-    pub fn current_user_saved_albums_add(&self, ids: Vec<&str>) -> Option<()> {
-        self.api_with_retry(|api| {
-            api.current_user_saved_albums_add(
-                ids.iter()
-                    .map(|id| AlbumId::from_id(*id).unwrap())
-                    .collect::<Vec<AlbumId>>(),
-            )
-        })
-    }
-
     pub fn current_user_saved_tracks(&self, offset: u32) -> Option<Page<SavedTrack>> {
         self.api_with_retry(|api| {
             api.current_user_saved_tracks_manual(Some(Market::FromToken), Some(50), Some(offset))
         })
-    }
-
-    pub fn current_user_saved_tracks_add(&self, ids: Vec<&str>) -> Option<()> {
-        self.api_with_retry(|api| {
-            api.current_user_saved_tracks_add(
-                ids.iter()
-                    .map(|id| TrackId::from_id(*id).unwrap())
-                    .collect::<Vec<TrackId>>(),
-            )
-        })
-    }
-
-    pub fn user_playlist_follow_playlist(&self, id: &str) -> Option<()> {
-        self.api_with_retry(|api| api.playlist_follow(PlaylistId::from_id(id).unwrap(), None))
     }
 
     pub fn artist_top_tracks(&self, id: &str) -> Option<Vec<Track>> {

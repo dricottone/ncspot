@@ -177,9 +177,7 @@ impl ListItem for Playable {
         self.as_listitem().queue(queue)
     }
 
-    fn save(&mut self, library: &Library) {
-        self.as_listitem().save(library)
-    }
+    fn save(&mut self, _library: &Library) {}
 
     fn open(&self, queue: Arc<Queue>, library: Arc<Library>) -> Option<Box<dyn ViewExt>> {
         self.as_listitem().open(queue, library)

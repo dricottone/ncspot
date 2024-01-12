@@ -115,9 +115,7 @@ impl ListItem for Show {
         }
     }
 
-    fn save(&mut self, library: &Library) {
-        library.save_show(self);
-    }
+    fn save(&mut self, _library: &Library) {}
 
     fn open(&self, queue: Arc<Queue>, library: Arc<Library>) -> Option<Box<dyn ViewExt>> {
         Some(ShowView::new(queue, library, self).into_boxed_view_ext())

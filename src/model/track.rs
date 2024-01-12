@@ -198,9 +198,7 @@ impl ListItem for Track {
         queue.append(Playable::Track(self.clone()));
     }
 
-    fn save(&mut self, library: &Library) {
-        library.save_tracks(vec![self], true);
-    }
+    fn save(&mut self, _library: &Library) {}
 
     fn open(&self, _queue: Arc<Queue>, _library: Arc<Library>) -> Option<Box<dyn ViewExt>> {
         None

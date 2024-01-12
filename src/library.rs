@@ -479,16 +479,6 @@ impl Library {
         }
     }
 
-    pub fn playlist_update(&self, updated: &Playlist) {
-        {
-            let mut playlists = self.playlists.write().expect("can't writelock playlists");
-            if let Some(playlist) = playlists.iter_mut().find(|p| p.id == updated.id) {
-                *playlist = updated.clone();
-            }
-        }
-        self.save_cache(cache_path(CACHE_PLAYLISTS), self.playlists.clone());
-    }
-
     pub fn is_saved_track(&self, track: &Playable) -> bool {
         if !*self.is_done.read().unwrap() {
             return false;
@@ -498,42 +488,6 @@ impl Library {
         tracks.iter().any(|t| t.id == track.id())
     }
 
-    pub fn save_tracks(&self, tracks: Vec<&Track>, api: bool) {
-        if !*self.is_done.read().unwrap() {
-            return;
-        }
-
-        if api
-            && self
-                .spotify
-                .api
-                .current_user_saved_tracks_add(
-                    tracks.iter().filter_map(|t| t.id.as_deref()).collect(),
-                )
-                .is_none()
-        {
-            return;
-        }
-
-        {
-            let mut store = self.tracks.write().unwrap();
-            let mut i = 0;
-            for track in tracks {
-                if store.iter().any(|t| t.id == track.id) {
-                    continue;
-                }
-
-                store.insert(i, track.clone());
-                i += 1;
-            }
-        }
-
-        self.populate_artists();
-
-        self.save_cache(cache_path(CACHE_TRACKS), self.tracks.clone());
-        self.save_cache(cache_path(CACHE_ARTISTS), self.artists.clone());
-    }
-
     pub fn is_saved_album(&self, album: &Album) -> bool {
         if !*self.is_done.read().unwrap() {
             return false;
@@ -541,35 +495,6 @@ impl Library {
 
         let albums = self.albums.read().unwrap();
         albums.iter().any(|a| a.id == album.id)
-    }
-
-    pub fn save_album(&self, album: &mut Album) {
-        if !*self.is_done.read().unwrap() {
-            return;
-        }
-
-        if let Some(ref album_id) = album.id {
-            if self
-                .spotify
-                .api
-                .current_user_saved_albums_add(vec![album_id.as_str()])
-                .is_none()
-            {
-                return;
-            }
-        }
-
-        {
-            let mut store = self.albums.write().unwrap();
-            if !store.iter().any(|a| a.id == album.id) {
-                store.insert(0, album.clone());
-
-                // resort list of albums
-                store.sort_unstable_by_key(|a| format!("{}{}{}", a.artists[0], a.year, a.title));
-            }
-        }
-
-        self.save_cache(cache_path(CACHE_ALBUMS), self.albums.clone());
     }
 
     pub fn is_followed_artist(&self, artist: &Artist) -> bool {
@@ -604,21 +529,6 @@ impl Library {
 
         let shows = self.shows.read().unwrap();
         shows.iter().any(|s| s.id == show.id)
-    }
-
-    pub fn save_show(&self, show: &Show) {
-        if !*self.is_done.read().unwrap() {
-            return;
-        }
-
-        if self.spotify.api.save_shows(vec![show.id.as_str()]) {
-            {
-                let mut store = self.shows.write().unwrap();
-                if !store.iter().any(|s| s.id == show.id) {
-                    store.insert(0, show.clone());
-                }
-            }
-        }
     }
 
     pub fn trigger_redraw(&self) {
