@@ -7,9 +7,8 @@ use crate::command::Command;
 use crate::commands::CommandResult;
 use crate::library::Library;
 use crate::model::album::Album;
-use crate::model::artist::Artist;
 use crate::queue::Queue;
-use crate::traits::ViewExt;
+use crate::traits::{ListItem,ViewExt};
 use crate::ui::listview::ListView;
 use crate::ui::tabbedview::TabbedView;
 
@@ -30,12 +29,8 @@ impl AlbumView {
             Vec::new()
         };
 
-        let artists = album
-            .artist_ids
-            .iter()
-            .zip(album.artists.iter())
-            .map(|(id, name)| Artist::new(id.clone(), name.clone()))
-            .collect();
+        // Note: currently cannot return None
+        let artists = album.artists().unwrap();
 
         let mut tabs = TabbedView::new();
         tabs.add_tab(

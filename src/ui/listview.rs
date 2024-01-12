@@ -23,6 +23,7 @@ use crate::ui::album::AlbumView;
 use crate::ui::artist::ArtistView;
 use crate::ui::contextmenu::ContextMenu;
 use crate::ui::pagination::Pagination;
+use crate::ui::selectview::select_artist;
 
 pub struct ListView<I: ListItem> {
     content: Arc<RwLock<Vec<I>>>,
@@ -642,10 +643,8 @@ impl<I: ListItem + Clone> ViewExt for ListView<I> {
                                         Ok(CommandResult::View(view))
                                     }
                                     _ => {
-                                        let dialog = ContextMenu::select_artist_dialog(
-                                            library, queue, artists,
-                                        );
-                                        Ok(CommandResult::Modal(Box::new(dialog)))
+                                        let modal = select_artist(queue, library, artists);
+                                        Ok(CommandResult::Modal(Box::new(modal)))
                                     }
                                 };
                             }

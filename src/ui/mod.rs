@@ -15,6 +15,7 @@ pub mod playlists;
 pub mod queue;
 pub mod search;
 pub mod search_results;
+pub mod selectview;
 pub mod show;
 pub mod statusbar;
 pub mod tabbedview;

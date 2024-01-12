@@ -7,7 +7,6 @@ use cursive::Cursive;
 use crate::commands::CommandResult;
 use crate::ext_traits::SelectViewExt;
 use crate::library::Library;
-use crate::model::artist::Artist;
 use crate::model::playable::Playable;
 use crate::model::playlist::Playlist;
 use crate::model::track::Track;
@@ -27,18 +26,8 @@ pub struct AddToPlaylistMenu {
     dialog: Modal<Dialog>,
 }
 
-pub struct SelectArtistMenu {
-    dialog: Modal<Dialog>,
-}
-
-pub struct SelectArtistActionMenu {
-    dialog: Modal<Dialog>,
-}
-
 enum ContextMenuAction {
     ShowItem(Box<dyn ListItem>),
-    SelectArtist(Vec<Artist>),
-    SelectArtistAction(Artist),
     AddToPlaylist(Box<Track>),
     ShowRecommendations(Box<Track>),
     Save(Box<dyn ListItem>),
@@ -102,81 +91,6 @@ impl ContextMenu {
         .with_name("addtrackmenu")
     }
 
-    pub fn select_artist_dialog(
-        library: Arc<Library>,
-        queue: Arc<Queue>,
-        artists: Vec<Artist>,
-    ) -> NamedView<SelectArtistMenu> {
-        let mut artist_select = SelectView::<Artist>::new();
-
-        for artist in artists {
-            artist_select.add_item(artist.name.clone(), artist);
-        }
-
-        artist_select.set_on_submit(move |s, selected_artist| {
-            let dialog = Self::select_artist_action_dialog(
-                library.clone(),
-                queue.clone(),
-                selected_artist.clone(),
-            );
-            s.pop_layer();
-            s.add_layer(dialog);
-        });
-
-        let dialog = Dialog::new()
-            .title("Select artist")
-            .dismiss_button("Close")
-            .padding(Margins::lrtb(1, 1, 1, 0))
-            .content(ScrollView::new(artist_select.with_name("artist_select")));
-
-        SelectArtistMenu {
-            dialog: Modal::new_ext(dialog),
-        }
-        .with_name("selectartist")
-    }
-
-    pub fn select_artist_action_dialog(
-        library: Arc<Library>,
-        queue: Arc<Queue>,
-        artist: Artist,
-    ) -> NamedView<SelectArtistActionMenu> {
-        let moved_artist = artist.clone();
-        let mut artist_action_select = SelectView::<bool>::new();
-        artist_action_select.add_item("View Artist", true);
-        if !library.is_followed_artist(&artist) {
-            artist_action_select.add_item("Follow Artist", false);
-        }
-        artist_action_select.set_on_submit(move |s, selected_action| {
-            match selected_action {
-                true => {
-                    if let Some(view) = moved_artist.clone().open(queue.clone(), library.clone()) {
-                        s.call_on_name("main", |v: &mut Layout| v.push_view(view));
-                    }
-                }
-                false => {
-                    if !library.clone().is_followed_artist(&moved_artist) {
-                        moved_artist.clone().save(&library);
-                    }
-                }
-            }
-            s.pop_layer();
-        });
-        let dialog = Dialog::new()
-            .title(format!(
-                "Select action for artist: {}",
-                artist.name.as_str()
-            ))
-            .dismiss_button("Close")
-            .padding(Margins::lrtb(1, 1, 1, 0))
-            .content(ScrollView::new(
-                artist_action_select.with_name("artist_action_select"),
-            ));
-        SelectArtistActionMenu {
-            dialog: Modal::new_ext(dialog),
-        }
-        .with_name("selectartistaction")
-    }
-
     fn track_already_added() -> Dialog {
         Dialog::text("This track is already in your playlist")
             .title("Track already exists")
@@ -210,19 +124,12 @@ impl ContextMenu {
             content.insert_item(2, "Queue", ContextMenuAction::Queue(item.as_listitem()));
         }
 
-        if let Some(artists) = item.artists() {
-            let action = match artists.len() {
-                0 => None,
-                1 => Some(ContextMenuAction::SelectArtistAction(artists[0].clone())),
-                _ => Some(ContextMenuAction::SelectArtist(artists.clone())),
-            };
-
-            if let Some(a) = action {
-                content.add_item(
-                    format!("Artist{}", if artists.len() > 1 { "s" } else { "" }),
-                    a,
-                )
-            }
+        // Note: currently cannot return None
+        for a in item.artists().unwrap().iter() {
+            content.add_item(
+                format!("Show {}", a.name),
+                ContextMenuAction::ShowItem(Box::new(a.clone())),
+            )
         }
 
         if let Some(ref a) = album {
@@ -283,15 +190,6 @@ impl ContextMenu {
                             s.call_on_name("main", move |v: &mut Layout| v.push_view(view));
                         }
                     }
-                    ContextMenuAction::SelectArtist(artists) => {
-                        let dialog = Self::select_artist_dialog(library, queue, artists.clone());
-                        s.add_layer(dialog);
-                    }
-                    ContextMenuAction::SelectArtistAction(artist) => {
-                        let dialog =
-                            Self::select_artist_action_dialog(library, queue, artist.clone());
-                        s.add_layer(dialog);
-                    }
                     ContextMenuAction::Save(item) => item.as_listitem().save(&library),
                     ContextMenuAction::Play(item) => item.as_listitem().play(&queue),
                     ContextMenuAction::PlayNext(item) => item.as_listitem().play_next(&queue),
@@ -326,19 +224,6 @@ impl ViewExt for ContextMenu {
     }
 }
 
-impl ViewExt for SelectArtistMenu {
-    fn on_command(&mut self, s: &mut Cursive, cmd: &Command) -> Result<CommandResult, String> {
-        log::info!("artist move command: {:?}", cmd);
-        handle_move_command::<Artist>(&mut self.dialog, s, cmd, "artist_select")
-    }
-}
-
-impl ViewExt for SelectArtistActionMenu {
-    fn on_command(&mut self, s: &mut Cursive, cmd: &Command) -> Result<CommandResult, String> {
-        handle_move_command::<bool>(&mut self.dialog, s, cmd, "artist_action_select")
-    }
-}
-
 fn handle_move_command<T: 'static>(
     sel: &mut Modal<Dialog>,
     s: &mut Cursive,
@@ -364,13 +249,5 @@ impl ViewWrapper for AddToPlaylistMenu {
 }
 
 impl ViewWrapper for ContextMenu {
-    wrap_impl!(self.dialog: Modal<Dialog>);
-}
-
-impl ViewWrapper for SelectArtistMenu {
-    wrap_impl!(self.dialog: Modal<Dialog>);
-}
-
-impl ViewWrapper for SelectArtistActionMenu {
     wrap_impl!(self.dialog: Modal<Dialog>);
 }
