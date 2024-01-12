@@ -160,11 +160,6 @@ impl Application {
         let spotify = spotify::Spotify::new(event_manager.clone(), credentials);
         let library = Arc::new(Library::new(event_manager.clone(), spotify.clone()));
         let queue = Arc::new(queue::Queue::new(spotify.clone()));
-        let cmd_manager = CommandManager::new(spotify.clone(), queue.clone(), library.clone(), event_manager.clone());
-
-        cmd_manager.register_keybindings(&mut cursive);
-
-        cursive.set_user_data(Rc::new(UserDataInner { cmd: cmd_manager }));
 
         let search = ui::search::SearchView::new(event_manager.clone(), queue.clone(), library.clone());
         let libraryview = ui::library::LibraryView::new(queue.clone(), library.clone());
@@ -176,12 +171,14 @@ impl Application {
                 .screen("library", libraryview.with_name("library"))
                 .screen("queue", queueview);
         layout.set_screen("library");
-
         cursive.add_fullscreen_layer(layout.with_name("main"));
+
+        let cmd_manager = CommandManager::new(spotify.clone(), queue.clone(), library.clone(), event_manager.clone());
+        cmd_manager.register_keybindings(&mut cursive);
+        cursive.set_user_data(Rc::new(UserDataInner { cmd: cmd_manager }));
 
         #[cfg(unix)]
         let cursive_callback_sink = cursive.cb_sink().clone();
-
         #[cfg(unix)]
         ASYNC_RUNTIME.get().unwrap().spawn(async {
             handle_signals(cursive_callback_sink).await;
