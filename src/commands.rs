@@ -203,7 +203,7 @@ impl CommandManager {
                 }
                 Ok(None)
             }
-            Command::SaveCurrent => {
+            Command::Save => {
                 if let Some(mut track) = self.queue.get_current() {
                     track.save(&self.library);
                 }
@@ -213,7 +213,6 @@ impl CommandManager {
             Command::Queue
             | Command::PlayNext
             | Command::Play
-            | Command::Save
             | Command::Add
             | Command::Focus(_)
             | Command::Back

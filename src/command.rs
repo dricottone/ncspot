@@ -83,7 +83,6 @@ pub enum Command {
     Play,
     UpdateLibrary,
     Save,
-    SaveCurrent,
     Add,
     AddCurrent,
     Focus(String),
@@ -123,7 +122,6 @@ impl Command {
             Self::Play => "play",
             Self::UpdateLibrary => "update",
             Self::Save => "save",
-            Self::SaveCurrent => "save current",
             Self::Add => "add",
             Self::AddCurrent => "add current",
             Self::Focus(_) => "focus",
@@ -256,15 +254,7 @@ pub fn parse(input: &str) -> Result<Vec<Command>, CommandParseError> {
                     }),
                     None => Ok(Command::Add),
                 }?,
-                "save" => match args.first().cloned() {
-                    Some("current") => Ok(Command::SaveCurrent),
-                    Some(arg) => Err(BadEnumArg {
-                        arg: arg.into(),
-                        accept: vec!["queue".into(), "current".into()],
-                        optional: true,
-                    }),
-                    None => Ok(Command::Save),
-                }?,
+                "save" => Command::Save,
                 "focus" => {
                     let &target = args.first().ok_or(InsufficientArgs {
                         cmd: command.into(),
